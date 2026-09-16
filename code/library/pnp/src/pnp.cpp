@@ -10,7 +10,7 @@
 
 namespace reprojection::pnp {
 
-using Ba = optimization::BundleAdjustment;
+using namespace optimization::bundle_adjustment;
 
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
@@ -53,10 +53,10 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     }
 
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
-    Ba::Problem const ba_problem{
-        optimization::BundleAdjustment::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
+    Discrete::Problem const ba_problem{
+        Discrete::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
 
-    auto const [result, ceres_state]{optimization::BundleAdjustment::Solve(ba_problem, 1)};
+    auto const [result, ceres_state]{Discrete::Solve(ba_problem, 1)};
     auto const& [_, rig_poses, _1]{result};
     if (ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
         // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there

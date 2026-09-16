@@ -25,7 +25,7 @@ auto const log{logging::Get("calibration")};
 
 }
 
-using Ba = optimization::BundleAdjustment;
+using Discrete = optimization::bundle_adjustment::Discrete;
 
 // TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
 // of targets sampled?
@@ -74,8 +74,8 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
         // intrinsic which will be the best initialization for the full optimization will produce the lowest mean
         // residual here on a subset of targets.
         auto const problem{
-            Ba::SingleCamProblem(camera_info, intrinsics_i, target_subset, initial_poses, false, AssetId{0})};
-        auto const [_, ceres_state]{Ba::Solve(problem, num_threads)};
+            Discrete::SingleCamProblem(camera_info, intrinsics_i, target_subset, initial_poses, false, AssetId{0})};
+        auto const [_, ceres_state]{Discrete::Solve(problem, num_threads)};
 
         double const mean_residual{ceres_state.solver_summary.final_cost / ceres_state.solver_summary.num_residuals};
         cost_intrinsic_map[mean_residual] = intrinsics_i;

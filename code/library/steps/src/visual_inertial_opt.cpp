@@ -16,6 +16,8 @@ auto const log{logging::Get("steps")};
 
 }
 
+using Continuous = optimization::bundle_adjustment::Continuous;
+
 VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data_id, AssetId const cam_id,
                                      StepId const spline_id, StepId const extrinsic_init_id, StepId const targets_id,
                                      StepId const camera_info_id, StepId const intrinsic_id, int const num_threads,
@@ -44,10 +46,9 @@ Hash VisualInertialOpt::CacheKey() const {
 // TODO(Jack): There is really no reason for us to limit us here to only passing the cam0 targets. We should really
 // consider this a calibration to the entire stereo rig we optimized before. Assuming we have a stereo rig of course!
 void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    // TODO USE SHORTENED NAME SPACE!!!
     // USE ALL CAMERAS! THIS IS HARDCODED TO SINGLE CAM PROBLEM!
-    auto const problem{optimization::BundleAdjustment::ViSingleCamProblem(
-        camera_info_, intrinsic_, targets_, *spline_, extrinsic_imu_rig_.se3_a_b, gravity_, cam_id_)};
+    auto const problem{Continuous::SingleCamProblem(camera_info_, intrinsic_, targets_, *spline_,
+                                                    extrinsic_imu_rig_.se3_a_b, gravity_, cam_id_)};
 
     auto const [result, ceres_state]{optimization::VisualInertialOpt(imu_data_, problem, num_threads_)};
 
@@ -64,7 +65,7 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     // REFACTOR TO EITHER CALCULTE DIRECRTL FROM VI BA PROBLEM OR CONVERT FROM VI PROBLEM TO REGULAR PROBLEM DIRECTLY!
     auto const ba_problem{
         optimization::SingleSplineCamProblem(camera_info_, intrinsic_, targets_, result.rig_spline, cam_id_)};
-    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
+    auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
     // here like we do for the regular bundle adjustment.

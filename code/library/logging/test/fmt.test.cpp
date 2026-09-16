@@ -42,7 +42,7 @@ TEST(LoggingFmt, TestBaResult) {
         {AssetId{1}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}},
         {AssetId{2}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}}};
 
-    optimization::BundleAdjustment::Result const data{AssetId{1}, rig_poses, camera_states};
+    optimization::bundle_adjustment::Discrete::Result const data{AssetId{1}, rig_poses, camera_states};
 
     std::string const result{fmt::format("{}", data)};
 

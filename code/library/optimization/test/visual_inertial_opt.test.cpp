@@ -40,10 +40,8 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
     Array6d const initial_se3_imu_rig{-1.19516, 1.17219, -1.23556, -0.0242935, 0.0530558, 0.0251949};
     Vector3d const initial_gravity{Vector3d{-0.212548, -0.293729, 9.79995}};
 
-    // TODO USE SHORTENED NAME SPACE!!!
-    auto const problem{optimization::BundleAdjustment::ViSingleCamProblem(
+    auto const problem{optimization::bundle_adjustment::Continuous::SingleCamProblem(
         camera_info, {tu::pinhole_intrinsics}, targets, spline_w_co, initial_se3_imu_rig, initial_gravity, AssetId{0})};
-
     auto const [result, ceres_state]{optimization::VisualInertialOpt(imu_data, problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
@@ -83,7 +81,7 @@ TEST(OptimizationVisualInertialOpt, TestReprojectionErrorSpline) {
 
     // Build the problem and calculate the residuals!
     auto const ba_problem{optimization::SingleSplineCamProblem(camera_info, intrinsic, targets, spline, camera_id)};
-    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
+    auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
 
     EXPECT_EQ(std::size(ba_problem.rig_poses), 1);
     EXPECT_TRUE(ba_problem.rig_poses.at(timestamp_ns).value.isApproxToConstant(0));

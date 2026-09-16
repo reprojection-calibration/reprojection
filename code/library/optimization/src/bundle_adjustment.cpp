@@ -7,23 +7,22 @@
 #include "cost_functions/reprojection_error.hpp"
 #include "time_sync/time_sync.hpp"
 
-namespace reprojection::optimization {
+namespace reprojection::optimization::bundle_adjustment {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem const& ba_problem,
-                                                                        int const num_threads) {
+std::pair<Discrete::Result, CeresState> Discrete::Solve(Problem const& problem, int const num_threads) {
     // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
     // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
     // of the world but I feel like I am missing the plotline.
-    Result result{ba_problem};
+    Result result{problem};
 
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR, num_threads};
     ceres::Problem ceres_problem{ceres_state.problem_options};
 
-    for (auto const& [camera_id, _, frame_timestamp_ns, bundle] : ba_problem.observations) {
+    for (auto const& [camera_id, _, frame_timestamp_ns, bundle] : problem.observations) {
         // cppcheck-suppress ignoredReturnValue
-        auto const& [camera_info, _1, camera_options]{ba_problem.cameras.at(camera_id)};
+        auto const& [camera_info, _1, camera_options]{problem.cameras.at(camera_id)};
         auto& camera_state{result.camera_states.at(camera_id)};
         // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
         // rig pose initialization was unsuccessful and we need to protect against that.
@@ -55,9 +54,9 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
     return {result, ceres_state};
 }
 
-BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
-                                                            std::vector<CameraProblemInput> const& cams,
-                                                            uint64_t const approx_sync_delta_ns) {
+Discrete::Problem Discrete::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
+                                            std::vector<CameraProblemInput> const& cams,
+                                            uint64_t const approx_sync_delta_ns) {
     Problem problem{cam0_id, cam0_poses};
     for (auto const& cam_i : cams) {
         AddCamera(cam_i, approx_sync_delta_ns, problem);
@@ -67,9 +66,9 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_
 }  // LCOV_EXCL_LINE
 
 // TODO(Jack): Refactor this to use the AddCamera method! We repeate the observation iteration which is not so nice.
-BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                             TargetSamples const& targets, Frames const& frames,
-                                                             bool const optimize_intrinsic, AssetId const camera_id) {
+Discrete::Problem Discrete::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                             TargetSamples const& targets, Frames const& frames,
+                                             bool const optimize_intrinsic, AssetId const camera_id) {
     CameraProblemInput const cam0{
         camera_id, camera_info, intrinsic, targets, Array6d::Zero(), optimize_intrinsic, false,
     };
@@ -79,9 +78,8 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
     return MultiCamProblem(cam0.camera_id, frames, {cam0}, 0);
 }
 
-BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
-                                                               Intrinsic const& intrinsic, Bundle const& bundle,
-                                                               Pose const& pose, bool const optimize_intrinsic) {
+Discrete::Problem Discrete::SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                               Bundle const& bundle, Pose const& pose, bool const optimize_intrinsic) {
     uint64_t constexpr timestamp_ns{0};
     ExtractedTarget const target{bundle, {}};
     AssetId const camera_id{0};
@@ -90,28 +88,28 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
                             optimize_intrinsic, camera_id);
 }
 
-BundleAdjustment::ViProblem BundleAdjustment::ViMultiCamProblem(AssetId const& cam0_id,
-                                                                spline::Se3Spline const& rig_spline,
-                                                                Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                                                std::vector<CameraProblemInput> const& cams) {
-    ViProblem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w};
+Continuous::Problem Continuous::MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
+                                                Array6d const& se3_imu_rig, Vector3d const& gravity_w,
+                                                std::vector<CameraProblemInput> const& cams) {
+    Problem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w};
     for (auto const& cam_i : cams) {
-        ViAddCamera(cam_i, problem);
+        AddCamera(cam_i, problem);
     }
 
     return problem;
 }
 
-BundleAdjustment::ViProblem BundleAdjustment::ViSingleCamProblem(
-    CameraInfo const& camera_info, Intrinsic const& intrinsic, TargetSamples const& targets,
-    spline::Se3Spline const& rig_spline, Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id) {
+Continuous::Problem Continuous::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                 TargetSamples const& targets, spline::Se3Spline const& rig_spline,
+                                                 Array6d const& se3_imu_rig, Vector3d const& gravity_w,
+                                                 AssetId camera_id) {
     // NOTE(Jack): For the visual inertial extrinsic optimization we already have the intrinsic and cam extrinsic
     // results so we do not need to optimize these further.
     CameraProblemInput const cam0{
         camera_id, camera_info, intrinsic, targets, Array6d::Zero(), false, false,
     };
 
-    return ViMultiCamProblem(cam0.camera_id, rig_spline, se3_imu_rig, gravity_w, {cam0});
+    return MultiCamProblem(cam0.camera_id, rig_spline, se3_imu_rig, gravity_w, {cam0});
 }
 
 // NOTE(Jack): All observations get synced to the rig_poses. This means that there might be poses that only have one
@@ -119,7 +117,7 @@ BundleAdjustment::ViProblem BundleAdjustment::ViSingleCamProblem(
 // are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
-void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
+void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
     problem.cameras.emplace(cam.camera_id, bundle_adjustment::Camera{cam.camera_info,  // LCOV_EXCL_LINE
                                                                      {cam.intrinsic, cam.extrinsic},
                                                                      {cam.optimize_intrinsic, cam.optimize_extrinsic}});
@@ -149,7 +147,7 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const a
     }
 }
 
-void BundleAdjustment::ViAddCamera(CameraProblemInput const& cam, ViProblem& problem) {
+void Continuous::AddCamera(CameraProblemInput const& cam, Problem& problem) {
     problem.cameras.emplace(cam.camera_id, bundle_adjustment::Camera{cam.camera_info,
                                                                      {cam.intrinsic, cam.extrinsic},
                                                                      {cam.optimize_intrinsic, cam.optimize_extrinsic}});
@@ -161,7 +159,7 @@ void BundleAdjustment::ViAddCamera(CameraProblemInput const& cam, ViProblem& pro
     }
 }
 
-transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
+transforms::RigState ToRigState(Discrete::Result const& result) {
     std::vector<Extrinsic> rig_cam_extrinsics;
     for (auto const& [camera_id, state_i] : result.camera_states) {
         // The Extrinsics() type does not allow self-connections/cycles!
@@ -184,7 +182,7 @@ transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
                                 transforms::Extrinsics{{rig_cam_extrinsics}}};
 }
 
-std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
+std::vector<ReprojectionError> EvaluateResiduals(Discrete::Problem const& ba_problem) {
     std::vector<ReprojectionError> errors;
     errors.reserve(std::size(ba_problem.observations));
 
@@ -223,4 +221,4 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
     return errors;
 }
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization::bundle_adjustment

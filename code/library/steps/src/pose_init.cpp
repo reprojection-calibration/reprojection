@@ -18,8 +18,6 @@ auto const log{logging::Get("steps")};
 
 }
 
-using Ba = optimization::BundleAdjustment;
-
 PoseInit::PoseInit(AssetId camera_id, StepId targets_id, StepId camera_info_id, StepId intrinsic_id, SqlitePtr const db)
     : camera_id_{camera_id},
       targets_id_{targets_id},
@@ -30,16 +28,19 @@ PoseInit::PoseInit(AssetId camera_id, StepId targets_id, StepId camera_info_id, 
 Hash PoseInit::CacheKey() const { return hashing::HashArgs(targets_, camera_info_, intrinsic_); }
 
 void PoseInit::Execute(StepId step_id, SqlitePtr const db) const {
+    using namespace optimization::bundle_adjustment;
+
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};
 
     // TODO(Jack): It is a little crazy how we go from Ba::Problem to Ba::Result to RigState for the output and logging
     // here. But we are currently searching for the stable abstractions and this is where we landed, it will probably
     // change.
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, {}, camera_id_)};
-    auto const rig_state{optimization::ToRigState(Ba::Result(problem))};
+    Discrete::Problem const problem{
+        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets_, camera_poses, {}, camera_id_)};
+    auto const rig_state{ToRigState(Discrete::Result(problem))};
 
     database::RigStateInsert(db.get(), step_id, targets_id_, rig_state);
-    auto const errors{optimization::EvaluateResiduals(problem)};
+    auto const errors{EvaluateResiduals(problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, {{camera_id_, targets_id_}}, errors);
 
     // TODO(Jack): That we log the problem here is a little confusing as it is not really a problem but a result, but I

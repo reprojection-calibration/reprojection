@@ -10,8 +10,7 @@
 #include "types/calibration_types.hpp"
 
 using namespace reprojection;
-
-using Ba = optimization::BundleAdjustment;
+using namespace optimization::bundle_adjustment;
 
 class BaFixture : public ::testing::Test {
    protected:
@@ -38,9 +37,9 @@ TEST_F(BaFixture, TestMultiCam) {
         {AssetId{3}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
     };
 
-    Ba::Problem const problem{Ba::MultiCamProblem(camera_id_, frames_, cams, 0)};
+    Discrete::Problem const problem{Discrete::MultiCamProblem(camera_id_, frames_, cams, 0)};
 
-    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     auto const& [ref_asset, frames, cameras]{result};
@@ -75,9 +74,10 @@ TEST_F(BaFixture, TestMultiCam) {
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
 TEST_F(BaFixture, TestBundleAdjustmentBatch) {
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, frames_, true, camera_id_)};
+    Discrete::Problem const problem{
+        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets_, frames_, true, camera_id_)};
 
-    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     auto const& [ref_asset, frames, cameras]{result};
@@ -110,9 +110,10 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
         frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, noisy_frames, true, camera_id_)};
+    Discrete::Problem const problem{
+        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets_, noisy_frames, true, camera_id_)};
 
-    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     auto const& [ref_asset, frames, cameras]{result};
@@ -147,10 +148,10 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
 TEST_F(BaFixture, TestToRigState) {
     std::map<AssetId, optimization::bundle_adjustment::CameraState> camera_states{
         {camera_id_, {intrinsic_, Array6d::Zero()}}};
-    Ba::Result data{camera_id_, frames_, camera_states};
+    Discrete::Result data{camera_id_, frames_, camera_states};
 
     // Single camera case - a special case where the rig_frame_asset_id is the came as the only camera state present.
-    auto result{optimization::ToRigState(data)};
+    auto result{ToRigState(data)};
     EXPECT_EQ(result.rig_frame_asset_id, camera_id_);
     EXPECT_EQ(std::size(result.poses), 56);
     // NOTE(Jack): At time of writing (08.09.2026) the identity self extrinsic is not supported because cycles are not
@@ -162,7 +163,7 @@ TEST_F(BaFixture, TestToRigState) {
     AssetId const second_cam{2};
     data.camera_states.insert({second_cam, {{Array3d::Zero()}, Array6d::Zero()}});
 
-    result = optimization::ToRigState(data);
+    result = ToRigState(data);
     EXPECT_EQ(result.rig_frame_asset_id, camera_id_);
     EXPECT_EQ(std::size(result.poses), 56);
     EXPECT_EQ(std::size(result.extrinsics.Values()), 1);
@@ -195,9 +196,10 @@ TEST_F(BaFixture, TestReprojectionError) {
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets, frames, false, camera_id_)};
+    Discrete::Problem const problem{
+        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets, frames, false, camera_id_)};
 
-    auto const residuals{optimization::EvaluateResiduals(problem)};
+    auto const residuals{EvaluateResiduals(problem)};
     EXPECT_EQ(std::size(residuals), 1);
 
     // There is only one value so we hardcode index into the 0 spot. Does not scale but works for the test!

@@ -13,11 +13,9 @@
 
 namespace reprojection::optimization {
 
-using Ba = BundleAdjustment;
-
-std::pair<Ba::ViResult, CeresState> VisualInertialOpt(ImuSamples const& imu_data, Ba::ViProblem const& problem,
-                                                      int num_threads) {
-    Ba::ViResult result{problem};
+std::pair<bundle_adjustment::Continuous::Result, CeresState> VisualInertialOpt(
+    ImuSamples const& imu_data, bundle_adjustment::Continuous::Problem const& problem, int num_threads) {
+    bundle_adjustment::Continuous::Result result{problem};
 
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY, num_threads};
@@ -72,10 +70,6 @@ std::pair<Ba::ViResult, CeresState> VisualInertialOpt(ImuSamples const& imu_data
                 cost_functions::Create(camera_info.camera_model, camera_info.bounds, pixels.row(j), points.row(j), u_i,
                                        result.rig_spline.GetTimeHandler().delta_t_ns_)};
 
-            // TODO ADD CAM RIG EXTRINISCS!!!!
-            //                 // TODO ADD CAM RIG EXTRINISCS!!!!
-            //                                 // TODO ADD CAM RIG EXTRINISCS!!!!
-            //                                                 // TODO ADD CAM RIG EXTRINISCS!!!!
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
             ceres_problem.AddResidualBlock(cost_function, nullptr,                 //
                                            camera_state.intrinsic.value.data(),    //
@@ -114,9 +108,10 @@ std::pair<Ba::ViResult, CeresState> VisualInertialOpt(ImuSamples const& imu_data
 // NOTE(Jack): I think there is something nice about using the same exact logic from the optimization (i.e. cost
 // functions) when calculating an optimization's residuals. That being said we eliminated a lot of code duplication by
 // just using the spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
-Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                   TargetSamples const& targets, spline::Se3Spline const& spline_w_co,
-                                   AssetId const camera_id) {
+bundle_adjustment::Discrete::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+                                                            TargetSamples const& targets,
+                                                            spline::Se3Spline const& spline_w_co,
+                                                            AssetId const camera_id) {
     // For a single camera problem we do not consider the rig-camera extrinsic and set those to constant identity.
     bundle_adjustment::Camera const camera{camera_info, bundle_adjustment::CameraState{intrinsic, Array6d::Zero()}, {}};
 
@@ -137,7 +132,7 @@ Ba::Problem SingleSplineCamProblem(CameraInfo const& camera_info, Intrinsic cons
         observations.push_back({camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 
-    return {camera_id, frames, {{camera_id, camera}}, observations};
+    return bundle_adjustment::Discrete::Problem{camera_id, frames, {{camera_id, camera}}, observations};
 }
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
