@@ -79,6 +79,7 @@ std::pair<Ba::ViResult, CeresState> VisualInertialOpt(ImuSamples const& imu_data
             // TODO(Jack): Should we also use robust loss here like we use for the stand alone bundle adjustment?
             ceres_problem.AddResidualBlock(cost_function, nullptr,                 //
                                            camera_state.intrinsic.value.data(),    //
+                                           camera_state.extrinsic.data(),          //
                                            result.rig_spline.ControlPoint(i),      //
                                            result.rig_spline.ControlPoint(i + 1),  //
                                            result.rig_spline.ControlPoint(i + 2),  //
