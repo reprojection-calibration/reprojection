@@ -11,7 +11,7 @@ using namespace reprojection::optimization::cost_functions;
 // check collinearity then we can remove the more convolute/simplified condition we currently achieve by setting the
 // first and last control points as fixed values.
 TEST(OptimizationCostFunctions, TestSplineEnergyOptimization) {
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR, 1};
     ceres::Problem problem{ceres_state.problem_options};
 
     ceres::CostFunction* const cost_function{SplineEnergy::Create(1)};

@@ -22,8 +22,7 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
                                        {5100, {{1, 1, 1}}},
                                        {5200, {{2, 2, 2}}}};
 
-    CubicBSplineC3 const one_segment_spline{spline::InitializeC3SplineState(measurements, 1)};
-    EXPECT_EQ(one_segment_spline.DeltaTNs(), 200);
+    CubicBSplineC3 const one_segment_spline{InitializeC3SplineState(measurements, 1)};
     EXPECT_EQ(one_segment_spline.Size(), 4);
     // NOTE(Jack): At this point this and below are canary in the coal mine tests, to make sure nothing changes as we
     // refactor. An unsolved problem is the time handling, and this is the reason why these values are not exact values
@@ -31,8 +30,7 @@ TEST(SplineSplineInitialization, TestInitializeSpline) {
     EXPECT_TRUE(one_segment_spline.ControlPoints().col(0).isApproxToConstant(-2.0352983526781605));
     EXPECT_TRUE(one_segment_spline.ControlPoints().col(3).isApproxToConstant(4.0556013690136226));
 
-    CubicBSplineC3 const two_segment_spline{spline::InitializeC3SplineState(measurements, 2)};
-    EXPECT_EQ(two_segment_spline.DeltaTNs(), 100);
+    CubicBSplineC3 const two_segment_spline{InitializeC3SplineState(measurements, 2)};
     EXPECT_EQ(two_segment_spline.Size(), 5);
     // See note above on canary coal mine.
     EXPECT_TRUE(two_segment_spline.ControlPoints().col(0).isApproxToConstant(-1.0133995349092337));

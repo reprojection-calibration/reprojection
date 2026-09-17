@@ -5,7 +5,7 @@
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
-#include "optimization/visual_inertial_opt.hpp"
+#include "optimization/visual_inertial.hpp"
 
 #include "utilities.hpp"
 
@@ -37,14 +37,14 @@ void VisualInertialInit::Execute(StepId const step_id, SqlitePtr const db) const
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(*spline_, imu_data_, num_threads_)};
 
     // TODO(Jack): We should log these diagnostics like we did for the bundle adjustment!
-    auto const [aa_imu_co, _]{rotation_result};
+    auto const [aa_imu_co, ceres_state]{rotation_result};
     // NOTE(Jack): In the cam-imu extrinsic initialization process we can only initialize the rotation so we just set
     // the translation to zero. If someone has an idea how to initialize the translation do tell!
     Array6d const tf_imu_co{aa_imu_co(0), aa_imu_co(1), aa_imu_co(2), 0, 0, 0};
     Extrinsic const extrinsic{imu_id_, cam_id_, tf_imu_co};
 
-    log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}]}}", StepLogInfo{Type(), step_id}, extrinsic,
-              fmt::join(gravity_w, ", "));
+    log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}], 'solver_summary': {}}}", StepLogInfo{Type(), step_id},
+              extrinsic, fmt::join(gravity_w, ", "), ceres_state.solver_summary);
 
     database::ExtrinsicInsert(db.get(), step_id, extrinsic);
     database::GravityInsert(db.get(), step_id, gravity_w);

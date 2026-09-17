@@ -8,10 +8,10 @@
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
+#include "types/optimization_types.hpp"
 
 using namespace reprojection;
-
-using Ba = optimization::BundleAdjustment;
+using BundleAdjustment = optimization::BundleAdjustment;
 
 class BaFixture : public ::testing::Test {
    protected:
@@ -32,24 +32,24 @@ class BaFixture : public ::testing::Test {
 TEST_F(BaFixture, TestMultiCam) {
     // NOTE(Jack): The real meat and potatoes of this test is that we initialize the second and third cam with random
     // non zero extrinsic. We then assert that we recover the identity extrinsic after the optimization.
-    std::vector<optimization::CameraProblemInput> const cams{
+    std::vector<CameraProblemInput> const cams{
         {camera_id_, camera_info_, intrinsic_, targets_, Array6d::Zero(), true, false},
         {AssetId{2}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
         {AssetId{3}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
     };
 
-    Ba::Problem const problem{Ba::MultiCamProblem(camera_id_, frames_, cams, 0)};
+    BundleAdjustment::Problem const problem{BundleAdjustment::MultiCamProblem(camera_id_, frames_, cams, 0)};
 
-    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    auto const& [ref_asset, frames, cameras]{result};
-    EXPECT_EQ(ref_asset, camera_id_);
+    auto const& [rig, cameras]{result};
+    EXPECT_EQ(rig.asset_id, camera_id_);
     EXPECT_EQ(std::size(cameras), 3);
 
     // Assert
-    EXPECT_EQ(std::size(frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : frames) {
+    EXPECT_EQ(std::size(rig.frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : rig.frames) {
         Array6d const gt_se3_co_w{frames_.at(timestamp_ns).value};
         Array6d const se3_co_w{frame_i.value};
 
@@ -75,17 +75,18 @@ TEST_F(BaFixture, TestMultiCam) {
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
 TEST_F(BaFixture, TestBundleAdjustmentBatch) {
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, frames_, true, camera_id_)};
+    auto const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, intrinsic_, targets_, frames_, true, camera_id_)};
 
-    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    auto const& [ref_asset, frames, cameras]{result};
-    EXPECT_EQ(ref_asset, camera_id_);
+    auto const& [rig, cameras]{result};
+    EXPECT_EQ(rig.asset_id, camera_id_);
 
     // Assert
-    EXPECT_EQ(std::size(frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : frames) {
+    EXPECT_EQ(std::size(rig.frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : rig.frames) {
         Array6d const gt_se3_co_w{frames_.at(timestamp_ns).value};
         Array6d const se3_co_w{frame_i.value};
 
@@ -110,16 +111,17 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
         frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets_, noisy_frames, true, camera_id_)};
+    auto const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, intrinsic_, targets_, noisy_frames, true, camera_id_)};
 
-    auto const [result, ceres_state]{Ba::Solve(problem, 1)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
-    auto const& [ref_asset, frames, cameras]{result};
-    EXPECT_EQ(ref_asset, camera_id_);
+    auto const& [rig, cameras]{result};
+    EXPECT_EQ(rig.asset_id, camera_id_);
 
-    EXPECT_EQ(std::size(frames), 56);
-    for (auto const& [timestamp_ns, frame_i] : frames) {
+    EXPECT_EQ(std::size(rig.frames), 56);
+    for (auto const& [timestamp_ns, frame_i] : rig.frames) {
         // WARN(Jack): Clearly I do not understand the axis-angle representation... And here something frustrating
         // happened that I will explain. This test using noisy poses had been working for months, no problems to report.
         // Comparing the Vector6d se3 poses directly worked perfectly and the optimization returned the ground truth
@@ -145,11 +147,11 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
 }
 
 TEST_F(BaFixture, TestToRigState) {
-    std::map<AssetId, Ba::CameraState> camera_states{{camera_id_, {intrinsic_, Array6d::Zero()}}};
-    Ba::Result data{camera_id_, frames_, camera_states};
+    std::map<AssetId, CameraState> camera_states{{camera_id_, {intrinsic_, Array6d::Zero()}}};
+    BundleAdjustment::Result data{camera_id_, frames_, camera_states};
 
     // Single camera case - a special case where the rig_frame_asset_id is the came as the only camera state present.
-    auto result{optimization::ToRigState(data)};
+    auto result{ToRigState(data)};
     EXPECT_EQ(result.rig_frame_asset_id, camera_id_);
     EXPECT_EQ(std::size(result.poses), 56);
     // NOTE(Jack): At time of writing (08.09.2026) the identity self extrinsic is not supported because cycles are not
@@ -161,7 +163,7 @@ TEST_F(BaFixture, TestToRigState) {
     AssetId const second_cam{2};
     data.camera_states.insert({second_cam, {{Array3d::Zero()}, Array6d::Zero()}});
 
-    result = optimization::ToRigState(data);
+    result = ToRigState(data);
     EXPECT_EQ(result.rig_frame_asset_id, camera_id_);
     EXPECT_EQ(std::size(result.poses), 56);
     EXPECT_EQ(std::size(result.extrinsics.Values()), 1);
@@ -194,9 +196,10 @@ TEST_F(BaFixture, TestReprojectionError) {
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
 
-    Ba::Problem const problem{Ba::SingleCamProblem(camera_info_, intrinsic_, targets, frames, false, camera_id_)};
+    auto const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, intrinsic_, targets, frames, false, camera_id_)};
 
-    auto const residuals{optimization::EvaluateResiduals(problem)};
+    auto const residuals{EvaluateResiduals(problem)};
     EXPECT_EQ(std::size(residuals), 1);
 
     // There is only one value so we hardcode index into the 0 spot. Does not scale but works for the test!

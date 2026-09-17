@@ -15,34 +15,31 @@
 
 namespace reprojection::optimization::cost_functions {
 
-ceres::CostFunction* Create(CameraModel const projection_type, ImageBounds const& bounds, Vector2d const& pixel,
-                            Vector3d const& point, double const u_i, uint64_t const delta_t_ns);
+ceres::CostFunction* Create(CameraModel projection_type, ImageBounds const& bounds, Vector2d const& pixel,
+                            Vector3d const& point, double u_i, uint64_t delta_t_ns);
 
 template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 class ReprojectionErrorSpline_T {
    public:
     template <typename T>
-    bool operator()(T const* const intrinsics_ptr, T const* const cp_0_ptr, T const* const cp_1_ptr,
-                    T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual_ptr) const {
+    bool operator()(T const* const intrinsics_ptr, T const* const se3_co_rig_ptr, T const* const cp_0_ptr,
+                    T const* const cp_1_ptr, T const* const cp_2_ptr, T const* const cp_3_ptr,
+                    T* const residual_ptr) const {
         auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
 
-        // Evaluate the se3 pose from the spline and then return the normal reprojection error using the spline pose as
-        // the world to camera optical transform.
-        Array6<T> const tf_w_co{spline::Se3Spline::EvaluatePose<T>(P, u_i_, delta_t_ns_)};
-        Array6<T> const tf_co_w{geometry::InverseTransform(tf_w_co)};
-
-        // TODO(Jack): We need to refactor the spline code to also use the rig semantics. For now we just hardcode the
-        // extrinsic to identity.
-        Array6<T> const identity{Array6<T>::Zero()};
+        // Evaluate the se3 pose from the spline and then return the normal reprojection error using the evaluated
+        // spline pose as the world to rig transform.
+        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P, u_i_, delta_t_ns_)};
+        Array6<T> const se3_rig_w{geometry::InverseTransform(se3_w_rig)};
 
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
-            .template operator()<T>(intrinsics_ptr, identity.data(), tf_co_w.data(), residual_ptr);
+            .template operator()<T>(intrinsics_ptr, se3_co_rig_ptr, se3_rig_w.data(), residual_ptr);
     }
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds,
                                        double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<ReprojectionErrorSpline_T, 2, T_Model::Size, 6, 6, 6, 6>(
+        return new ceres::AutoDiffCostFunction<ReprojectionErrorSpline_T, 2, T_Model::Size, 6, 6, 6, 6, 6>(
             new ReprojectionErrorSpline_T(pixel, point_w, bounds, u_i, delta_t_ns));
     }
 

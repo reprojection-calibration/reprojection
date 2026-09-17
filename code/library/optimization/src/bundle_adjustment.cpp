@@ -11,27 +11,25 @@ namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem const& ba_problem,
-                                                                        int const num_threads) {
+std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem const& problem, int const num_threads) {
     // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
     // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
     // of the world but I feel like I am missing the plotline.
-    Result result{ba_problem};
+    Result result{problem};
 
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
-    ceres_state.solver_options.num_threads = num_threads;
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR, num_threads};
     ceres::Problem ceres_problem{ceres_state.problem_options};
 
-    for (auto const& [camera_id, _, frame_timestamp_ns, bundle] : ba_problem.observations) {
+    for (auto const& [camera_id, _, frame_timestamp_ns, bundle] : problem.observations) {
         // cppcheck-suppress ignoredReturnValue
-        auto const& [camera_info, _1, camera_options]{ba_problem.cameras.at(camera_id)};
+        auto const& [camera_info, _1, camera_options]{problem.cameras.at(camera_id)};
         auto& camera_state{result.camera_states.at(camera_id)};
         // Protect against the case of a missing rig pose - it can be that we have a observation for a frame where the
         // rig pose initialization was unsuccessful and we need to protect against that.
-        if (not result.rig_poses.contains(frame_timestamp_ns)) {
+        if (not result.rig.frames.contains(frame_timestamp_ns)) {
             continue;  // LCOV_EXCL_LINE
         }
-        auto& rig_pose{result.rig_poses.at(frame_timestamp_ns)};
+        auto& rig_pose{result.rig.frames.at(frame_timestamp_ns)};
 
         auto const& [pixels, points]{bundle};
         for (Eigen::Index j{0}; j < pixels.rows(); ++j) {
@@ -77,7 +75,7 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
 
     // NOTE(Jack): Setting the sync tolerance to zero enforces exact matches only. Which considering that the frames
     // have to come from the camera's targets makes sense!
-    return MultiCamProblem(camera_id, frames, {cam0}, 0);
+    return MultiCamProblem(cam0.camera_id, frames, {cam0}, 0);
 }
 
 BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
@@ -96,17 +94,16 @@ BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const&
 // are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
-void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t const approx_sync_delta_ns,
-                                 Problem& problem) {
-    problem.cameras.emplace(camera.camera_id, Camera{camera.camera_info,  // LCOV_EXCL_LINE
-                                                     {camera.intrinsic, camera.extrinsic},
-                                                     {camera.optimize_intrinsic, camera.optimize_extrinsic}});
+void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
+    problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
+                                                  {cam.intrinsic, cam.extrinsic},
+                                                  {cam.optimize_intrinsic, cam.optimize_extrinsic}});
 
-    auto const timestamps{camera.targets | std::views::keys};
+    auto const timestamps{cam.targets | std::views::keys};
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
 
     // TODO(Jack): We need to provide some information to the user regarding how the data was synced.
-    for (auto const& [frame_timestamp_ns, _] : problem.rig_poses) {
+    for (auto const& [frame_timestamp_ns, _] : problem.rig.frames) {
         // TODO(Jack): Hand rolling the time synchronization logic here is not so nice, as we need it in multiple
         // places.
         auto const target_timestamps_it{time_sync::FindClosest(remaining_targets, frame_timestamp_ns)};
@@ -120,7 +117,7 @@ void BundleAdjustment::AddCamera(CameraProblemInput const& camera, uint64_t cons
         }
 
         problem.observations.push_back(
-            {camera.camera_id, sample_timestamp_ns, frame_timestamp_ns, camera.targets.at(sample_timestamp_ns).bundle});
+            {cam.camera_id, sample_timestamp_ns, frame_timestamp_ns, cam.targets.at(sample_timestamp_ns).bundle});
 
         // Remove it so a double match cannot happen.
         remaining_targets.erase(target_timestamps_it);
@@ -131,7 +128,7 @@ transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
     std::vector<Extrinsic> rig_cam_extrinsics;
     for (auto const& [camera_id, state_i] : result.camera_states) {
         // The Extrinsics() type does not allow self-connections/cycles!
-        if (camera_id == result.rig_frame_asset_id) {
+        if (camera_id == result.rig.asset_id) {
             continue;
         }
 
@@ -142,12 +139,11 @@ transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
         // setup is a tree. If we went from camera to camera I think this would make the optimization process ugly
         // because then we would need to chain them together and our cost function would have to accept a variable
         // number of extrinsics chained together! Does that make sense? We need to do some thinking here!!!
-        Extrinsic const extrinsic_i{camera_id, result.rig_frame_asset_id, state_i.extrinsic};
+        Extrinsic const extrinsic_i{camera_id, result.rig.asset_id, state_i.extrinsic};
         rig_cam_extrinsics.push_back(extrinsic_i);
     }
 
-    return transforms::RigState{result.rig_frame_asset_id, result.rig_poses,
-                                transforms::Extrinsics{{rig_cam_extrinsics}}};
+    return transforms::RigState{result.rig.asset_id, result.rig.frames, transforms::Extrinsics{{rig_cam_extrinsics}}};
 }
 
 std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
@@ -157,10 +153,10 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
     for (auto const& [camera_id, sample_timestamp_ns, frame_timestamp_ns, bundle] : ba_problem.observations) {
         // cppcheck-suppress ignoredReturnValue
         auto const& [camera_info, camera_state, _]{ba_problem.cameras.at(camera_id)};
-        if (not ba_problem.rig_poses.contains(frame_timestamp_ns)) {
+        if (not ba_problem.rig.frames.contains(frame_timestamp_ns)) {
             continue;
         }
-        auto const& rig_pose{ba_problem.rig_poses.at(frame_timestamp_ns)};
+        auto const& rig_pose{ba_problem.rig.frames.at(frame_timestamp_ns)};
 
         std::vector<double const*> parameter_blocks;
         parameter_blocks.push_back(camera_state.intrinsic.value.data());
@@ -189,4 +185,4 @@ std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const
     return errors;
 }
 
-}  // namespace  reprojection::optimization
+}  // namespace reprojection::optimization

@@ -10,8 +10,6 @@
 
 namespace reprojection::pnp {
 
-using Ba = optimization::BundleAdjustment;
-
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
@@ -53,16 +51,18 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
     }
 
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
-    Ba::Problem const ba_problem{
-        optimization::BundleAdjustment::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
 
-    auto const [result, ceres_state]{optimization::BundleAdjustment::Solve(ba_problem, 1)};
-    auto const& [_, rig_poses, _1]{result};
+    using BundleAdjustment = optimization::BundleAdjustment;
+    BundleAdjustment::Problem const problem{
+        BundleAdjustment::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
+    auto const& [rig, _1]{result};
+
     if (ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
         // TODO(Jack): This is a hacky way to get the frame, but the point of the pnp problem construction is that there
         // is only ever one single frame, so we can get away with this here. Does it look nice? No. Is it easy to
         // maintain and understand? No. Some future soul will save us.
-        return PoseWithCost{geometry::Exp(rig_poses.begin()->second.value), ceres_state.solver_summary.final_cost};
+        return PoseWithCost{geometry::Exp(rig.frames.begin()->second.value), ceres_state.solver_summary.final_cost};
     } else {
         return PnpErrorCode::FailedRefinement;  // LCOV_EXCL_LINE
     }

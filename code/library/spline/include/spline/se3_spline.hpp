@@ -55,7 +55,11 @@ class Se3Spline {
 
     Eigen::Ref<Matrix2NXd const> ControlPoints() const { return control_points_; }
 
-    Eigen::Ref<Matrix2NXd> MutableControlPoints() { return control_points_; }
+    // NOTE(Jack): These overrides here that return the pointers directly are primarily used by the ceres cost
+    // functions.
+    double const* ControlPoint(Eigen::Index const i) const { return control_points_.col(i).data(); }
+
+    double* ControlPoint(Eigen::Index const i) { return control_points_.col(i).data(); }
 
     int Size() const { return control_points_.cols(); }
 

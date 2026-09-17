@@ -104,28 +104,27 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
 
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
 
-        steps::ImageLoading const image_loading_step{camera.id, image_input.signature, image_input.source};
-        StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading_step, db)};
+        steps::ImageLoading const image_loading{camera.id, image_input.signature, image_input.source};
+        StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading, db)};
 
-        steps::CameraInfoStep const camera_info_step{camera.id, image_loading_id, camera.config.camera_model, db};
-        StepId const camera_info_id{RunStep<steps::CameraInfoStep>(context.workflow_id, camera_info_step, db)};
+        steps::CameraInfoStep const camera_info{camera.id, image_loading_id, camera.config.camera_model, db};
+        StepId const camera_info_id{RunStep<steps::CameraInfoStep>(context.workflow_id, camera_info, db)};
 
-        steps::FeatureExtraction const feature_extraction_step{
+        steps::FeatureExtraction const feature_extraction{
             camera.id,      image_loading_id,         context.application.show_extraction,
             target_info_id, context.assets.target.id, db};
-        StepId const targets_id{RunStep<steps::FeatureExtraction>(context.workflow_id, feature_extraction_step, db)};
+        StepId const targets_id{RunStep<steps::FeatureExtraction>(context.workflow_id, feature_extraction, db)};
 
-        steps::IntrinsicInit const intrinsic_init_step{camera.id, context.application.threads, camera_info_id,
-                                                       targets_id, db};
-        StepId const intrinsic_init_id{RunStep<steps::IntrinsicInit>(context.workflow_id, intrinsic_init_step, db)};
+        steps::IntrinsicInit const intrinsic_init{camera.id, context.application.threads, camera_info_id, targets_id,
+                                                  db};
+        StepId const intrinsic_init_id{RunStep<steps::IntrinsicInit>(context.workflow_id, intrinsic_init, db)};
 
-        steps::PoseInit const pose_init_step{camera.id, targets_id, camera_info_id, intrinsic_init_id, db};
-        StepId const pose_init_id{RunStep<steps::PoseInit>(context.workflow_id, pose_init_step, db)};
+        steps::PoseInit const pose_init{camera.id, targets_id, camera_info_id, intrinsic_init_id, db};
+        StepId const pose_init_id{RunStep<steps::PoseInit>(context.workflow_id, pose_init, db)};
 
-        steps::BundleAdjustment const bundle_adjustment_step{
+        steps::BundleAdjustment const bundle_adjustment{
             camera.id, targets_id, context.application.threads, camera_info_id, intrinsic_init_id, pose_init_id, db};
-        StepId const bundle_adjustment_id{
-            RunStep<steps::BundleAdjustment>(context.workflow_id, bundle_adjustment_step, db)};
+        StepId const bundle_adjustment_id{RunStep<steps::BundleAdjustment>(context.workflow_id, bundle_adjustment, db)};
 
         camera_calibrations.push_back({camera.id, camera_info_id, targets_id, pose_init_id, bundle_adjustment_id});
     }
@@ -138,8 +137,8 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     steps::CalibrationContext const context{steps::InitializeCalibration(cfg_table, db)};
 
     // Only one target is allowed.
-    steps::TargetInfoStep const target_info_step{context.assets.target.id, context.assets.target.config};
-    StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info_step, db)};
+    steps::TargetInfoStep const target_info{context.assets.target.id, context.assets.target.config};
+    StepId const target_info_id{RunStep<steps::TargetInfoStep>(context.workflow_id, target_info, db)};
 
     std::vector const cam_stages{CamStages(context, target_info_id, image_inputs, db)};
 
@@ -148,6 +147,11 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
     auto const& cam0{cam_stages.front()};
 
     bool const is_multicam{std::size(context.assets.cameras) > 1};
+
+    // ERROR(Jack): What happens if its a mono-camera setup and the stereo_rig_opt_id is never set??? We need to handle
+    // the identity case better! We currently handle this manually in VisualInertialOpt() but that solution does not
+    // scale!
+    StepId stereo_rig_opt_id{-1};
     if (is_multicam) {
         log->info("\033[35m{{'stage': 'multi_cam', 'assets': {}}}\033[0m", context.assets.cameras);
 
@@ -161,10 +165,9 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
                                                  context.application.threads,
                                                  context.application.approx_sync_delta_ns,
                                                  db};
-        StepId const stereo_rig_opt_id{RunStep<steps::StereoRigOpt>(context.workflow_id, stereo_rig_opt, db)};
+        stereo_rig_opt_id = RunStep<steps::StereoRigOpt>(context.workflow_id, stereo_rig_opt, db);
 
         // TODO(Jack): Should we be using the rig poses here for the cam-imu extrinsic calibration? I think so.
-        static_cast<void>(stereo_rig_opt_id);
     }
 
     // TODO(Jack): Find a way to get this to run in a unit test! I think we could do this with the data generation
@@ -181,28 +184,25 @@ void Calibrate(toml::table const& cfg_table, ImageInputs const& image_inputs, st
         steps::ImuDataLoading const imu_data_loading_step{imu_id, imu_input->signature, imu_input->source};
         StepId const imu_data_id{steps::RunStep<steps::ImuDataLoading>(context.workflow_id, imu_data_loading_step, db)};
 
-        steps::SplineInit const spline_init_step{cam0, db};
-        StepId const spline_init_id{steps::RunStep<steps::SplineInit>(context.workflow_id, spline_init_step, db)};
+        steps::SplineInit const spline_init{cam0, db};
+        StepId const spline_init_id{steps::RunStep<steps::SplineInit>(context.workflow_id, spline_init, db)};
 
-        steps::VisualInertialInit const visual_inertial_init{
+        steps::VisualInertialInit const vi_init{
             imu_id, imu_data_id, cam0.asset_id, spline_init_id, context.application.threads, db};
-        StepId const visual_inertial_init_id{
-            steps::RunStep<steps::VisualInertialInit>(context.workflow_id, visual_inertial_init, db)};
+        StepId const vi_init_id{steps::RunStep<steps::VisualInertialInit>(context.workflow_id, vi_init, db)};
 
-        steps::VisualInertialOpt const visual_inertial_opt_step{imu_id,
-                                                                imu_data_id,
-                                                                cam0.asset_id,
-                                                                spline_init_id,
-                                                                visual_inertial_init_id,
-                                                                cam0.targets_id,
-                                                                cam0.camera_info_id,
-                                                                cam0.bundle_adjustment_id,
-                                                                context.application.threads,
-                                                                db};
-        StepId const visual_inertial_opt_id{
-            steps::RunStep<steps::VisualInertialOpt>(context.workflow_id, visual_inertial_opt_step, db)};
+        steps::VisualInertialOpt const vi_opt{imu_id,
+                                              imu_data_id,
+                                              cam0.asset_id,
+                                              cam_stages,
+                                              spline_init_id,
+                                              vi_init_id,
+                                              stereo_rig_opt_id,
+                                              context.application.threads,
+                                              db};
+        StepId const vi_opt_id{steps::RunStep<steps::VisualInertialOpt>(context.workflow_id, vi_opt, db)};
 
-        static_cast<void>(visual_inertial_opt_id);
+        static_cast<void>(vi_opt_id);
     }
 
     // LCOV_EXCL_STOP

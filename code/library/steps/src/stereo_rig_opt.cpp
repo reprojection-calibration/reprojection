@@ -16,8 +16,6 @@ auto const log{logging::Get("steps")};
 
 }
 
-using Ba = optimization::BundleAdjustment;
-
 StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const& cams, StepId const extrinsic_init_id,
                            int const num_threads, uint64_t const approx_sync_delta_ns, SqlitePtr db)
     : cam0_id_{cam0_id}, num_threads_{num_threads}, approx_sync_delta_ns_{approx_sync_delta_ns} {
@@ -38,15 +36,8 @@ StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const
         auto const extrinsic{
             ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, cam_i.asset_id, cam0_id_), log)};
 
-        ba_input_.emplace_back(optimization::CameraProblemInput{
-            cam_i.asset_id,
-            camera_info,
-            intrinsic,
-            targets,
-            extrinsic.se3_a_b,
-            false,
-            not is_reference_cam,
-        });
+        ba_input_.emplace_back(CameraProblemInput{cam_i.asset_id, camera_info, intrinsic, targets, extrinsic.se3_a_b,
+                                                  false, not is_reference_cam});
     }
 }
 
@@ -61,13 +52,16 @@ Hash StereoRigOpt::CacheKey() const {
 }
 
 void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    Ba::Problem const problem{Ba::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
-    auto const [result, ceres_state]{Ba::Solve(problem, num_threads_)};
+    using BundleAdjustment = optimization::BundleAdjustment;
 
-    database::RigStateInsert(db.get(), step_id, cam_target_ids_.at(cam0_id_), optimization::ToRigState(result));
+    BundleAdjustment::Problem const problem{
+        BundleAdjustment::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, num_threads_)};
 
-    Ba::Problem const optimized_problem{problem, result.rig_poses, result.camera_states};
-    auto const errors{optimization::EvaluateResiduals(optimized_problem)};
+    database::RigStateInsert(db.get(), step_id, cam_target_ids_.at(cam0_id_), ToRigState(result));
+
+    BundleAdjustment::Problem const optimized_problem{problem, result.rig.frames, result.camera_states};
+    auto const errors{EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, cam_target_ids_, errors);
 
     log->info("{{{}, 'problem': {}}}}}", StepLogInfo{Type(), step_id}, problem);

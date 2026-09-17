@@ -11,12 +11,10 @@ namespace reprojection::optimization {
 // aliasing (see comment at RigidBodyAngularVelocity::Create()).
 std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& omega_imu, spline::Se3Spline spline,
                                                         int const num_threads) {
-    // TODO(Jack): We need a better more uniform way of parameterizing the ceres optimizations.
-    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR};
-    ceres_state.solver_options.num_threads = num_threads;
+    CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR, num_threads};
     ceres::Problem problem{ceres_state.problem_options};
 
-    Array6d tf_imu_co{0, 0, 0, 0, 0, 0};
+    Array6d se3_imu_rig{0, 0, 0, 0, 0, 0};
     for (auto const timestamp_ns : omega_imu | std::views::keys) {
         auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
         if (not normalized_position) {
@@ -27,22 +25,23 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& o
         ceres::CostFunction* const cost_function{cost_functions::RigidBodyAngularVelocity::Create(
             omega_imu.at(timestamp_ns).value, u_i, spline.GetTimeHandler().delta_t_ns_)};
 
-        problem.AddResidualBlock(cost_function, nullptr, tf_imu_co.data(),     //
-                                 spline.MutableControlPoints().col(i).data(),  //
-                                 spline.MutableControlPoints().col(i + 1).data(),
-                                 spline.MutableControlPoints().col(i + 2).data(),
-                                 spline.MutableControlPoints().col(i + 3).data());
+        problem.AddResidualBlock(cost_function, nullptr,      //
+                                 se3_imu_rig.data(),          //
+                                 spline.ControlPoint(i),      //
+                                 spline.ControlPoint(i + 1),  //
+                                 spline.ControlPoint(i + 2),  //
+                                 spline.ControlPoint(i + 3));
 
         // NOTE(Jack): We only want to initialize the extrinsic orientation between the imu and camera therefore we set
         // the control points constant.
         for (int j{0}; j < 4; ++j) {
-            problem.SetParameterBlockConstant(spline.MutableControlPoints().col(i + j).data());
+            problem.SetParameterBlockConstant(spline.ControlPoint(i + j));
         }
     }
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
 
-    return {tf_imu_co.topRows<3>(), ceres_state};
+    return {se3_imu_rig.topRows<3>(), ceres_state};
 }
 
 }  // namespace  reprojection::optimization

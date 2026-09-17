@@ -9,7 +9,7 @@
 
 using namespace reprojection;
 
-TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
+TEST(CalibrationInitMethods, TestInitializeIntrinsics) {
     // TODO(Jack): Use a fixture!!!
     CameraInfo const sensor{CameraModel::DoubleSphere, testing_utilities::image_bounds};
     Intrinsic const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -21,7 +21,7 @@ TEST(CalibrationInitializationMethods, TestInitializeIntrinsics) {
     ASSERT_TRUE(result.has_value());
 }
 
-TEST(CalibrationInitializationMethods, TestPoseInitialization) {
+TEST(CalibrationInitMethods, TestPoseInitialization) {
     // Setup test data
     CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
     Intrinsic const intrinsics{testing_utilities::double_sphere_intrinsics};
@@ -45,18 +45,18 @@ TEST(CalibrationInitializationMethods, TestPoseInitialization) {
 // NOTE(Jack): Yes this test would be better if we actually had a simulated stereo data and got back a result that was
 // not just identity. I agree, but getting back identity is also good and demonstrates the method is basically
 // consistent.
-TEST(CalibrationInitializationMethods, TestInitializeCamCamExtrinsic) {
+TEST(CalibrationInitMethods, TestStereoExtrinsicInit) {
     CameraInfo const camera_info{CameraModel::DoubleSphere, testing_utilities::image_bounds};
     Intrinsic const intrinsics{testing_utilities::double_sphere_intrinsics};
     auto const [_, frames]{testing_mocks::GenerateMvgData(camera_info, intrinsics, 60, 1)};
 
     // Passing the same set of frames for both a and b means we are guaranteed to get identity back because there is
     // no extrinsic at all.
-    Array6d const result{calibration::InitializeCamCamExtrinsic(frames, frames, 1'000'000)};
+    Array6d const result{calibration::StereoExtrinsicInit(frames, frames, 1'000'000)};
     EXPECT_NEAR(result.sum(), 0.0, 1e-6);
 }
 
-TEST(CalibrationInitializationMethods, TestEstimateCameraImuAlignment) {
+TEST(CalibrationInitMethods, TestEstimateCameraImuAlignment) {
     auto [imu_data, spline_w_b]{testing_mocks::GenerateImuData(10, 50)};
 
     auto const [rotation_result, gravity_w]{calibration::EstimateCameraImuAlignment(spline_w_b, imu_data, 1)};

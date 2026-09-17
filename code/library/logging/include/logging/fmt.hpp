@@ -69,10 +69,10 @@ struct fmt::formatter<reprojection::transforms::RigState> {
 };
 
 template <>
-struct fmt::formatter<reprojection::optimization::BundleAdjustment::CameraState> {
+struct fmt::formatter<reprojection::CameraState> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
-    auto format(reprojection::optimization::BundleAdjustment::CameraState const& state, format_context& ctx) const {
+    auto format(reprojection::CameraState const& state, format_context& ctx) const {
         return format_to(ctx.out(), "{{'intrinsic': [{:.3f}], 'extrinsic': [{:.3f}]}}",
                          join(state.intrinsic.value, ", "), join(state.extrinsic, ", "));
     }
@@ -84,9 +84,9 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
     auto format(reprojection::optimization::BundleAdjustment::Problem const& problem, format_context& ctx) const {
-        auto out{format_to(
-            ctx.out(), "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
-            problem.rig_frame_asset_id.value, std::size(problem.rig_poses), std::size(problem.observations))};
+        auto out{format_to(ctx.out(),
+                           "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
+                           problem.rig.asset_id.value, std::size(problem.rig.frames), std::size(problem.observations))};
 
         bool first{true};
         for (auto const& [camera_id, camera] : problem.cameras) {
@@ -114,7 +114,7 @@ struct fmt::formatter<reprojection::optimization::BundleAdjustment::Result> {
 
     auto format(reprojection::optimization::BundleAdjustment::Result const& result, format_context& ctx) const {
         auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
-                           result.rig_frame_asset_id.value, std::size(result.rig_poses))};
+                           result.rig.asset_id.value, std::size(result.rig.frames))};
 
         bool first{true};
         for (auto const& [camera_id, camera_state] : result.camera_states) {

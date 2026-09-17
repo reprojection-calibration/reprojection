@@ -74,10 +74,20 @@ void InsertAssetGroups(CalibrationAssets const& assets, SqlitePtr const db) {
         database::AssetGroupInsert(db.get(), {camera_id_a.id, camera_id_b.id});
     }
 
-    // The IMU is calibrated relative to the reference camera.
     if (assets.imu.has_value()) {
-        // WARN(Jack): Hardcoded importance of the first camera!
+        // The spline init asset group.
         database::AssetGroupInsert(db.get(), {assets.cameras.front().id, assets.imu->id});
+
+        // TODO(Jack): Can we assemble these ids in a more eloquent way?
+        std::vector<AssetId> data;
+        for (auto const& cam : assets.cameras) {
+            // cppcheck-suppress useStlAlgorithm
+            data.push_back(cam.id);
+        }
+        data.push_back(assets.imu->id);
+
+        // The visual inertial optimization asset group.
+        database::AssetGroupInsert(db.get(), data);
     }
 }
 

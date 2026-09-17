@@ -29,7 +29,7 @@ TEST(LoggingFmt, TestRigState) {
 }
 
 TEST(LoggingFmt, TestBaCameraState) {
-    optimization::BundleAdjustment::CameraState const data{Intrinsic{Array3d::Ones()}, Array6d::Ones()};
+    CameraState const data{Intrinsic{Array3d::Ones()}, Array6d::Ones()};
 
     std::string const result{fmt::format("{}", data)};
 
@@ -38,9 +38,8 @@ TEST(LoggingFmt, TestBaCameraState) {
 
 TEST(LoggingFmt, TestBaResult) {
     Frames const rig_poses{Frame{1, Array6d::Ones()}, Frame{2, Array6d::Ones()}};
-    std::map<AssetId, optimization::BundleAdjustment::CameraState> camera_states{
-        {AssetId{1}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}},
-        {AssetId{2}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}}};
+    std::map<AssetId, CameraState> camera_states{{AssetId{1}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}},
+                                                 {AssetId{2}, {Intrinsic{Array3d::Ones()}, Array6d::Ones()}}};
 
     optimization::BundleAdjustment::Result const data{AssetId{1}, rig_poses, camera_states};
 
