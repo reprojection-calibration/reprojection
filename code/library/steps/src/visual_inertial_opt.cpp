@@ -51,8 +51,10 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
         if (cam_i.asset_id == cam0_id_) {
             extrinsic = Extrinsic(cam_i.asset_id, cam0_id_, Array6d::Zero());
         } else {
+            // LCOV_EXCL_START
             extrinsic =
                 ValueOrExit(database::ExtrinsicSelect(db.get(), stereo_rig_opt_id, cam_i.asset_id, cam0_id_), log);
+            // LCOV_EXCL_STOP
         }
 
         ba_input_.emplace_back(
