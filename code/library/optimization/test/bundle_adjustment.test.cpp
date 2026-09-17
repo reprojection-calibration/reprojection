@@ -11,7 +11,7 @@
 #include "types/optimization_types.hpp"
 
 using namespace reprojection;
-using Discrete = optimization::Discrete;
+using BundleAdjustment = optimization::BundleAdjustment;
 
 class BaFixture : public ::testing::Test {
    protected:
@@ -38,9 +38,9 @@ TEST_F(BaFixture, TestMultiCam) {
         {AssetId{3}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
     };
 
-    Discrete::Problem const problem{Discrete::MultiCamProblem(camera_id_, frames_, cams, 0)};
+    BundleAdjustment::Problem const problem{BundleAdjustment::MultiCamProblem(camera_id_, frames_, cams, 0)};
 
-    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     auto const& [rig, cameras]{result};
@@ -75,10 +75,10 @@ TEST_F(BaFixture, TestMultiCam) {
 // because the optimization will likely not even execute once because the error is zero. For a real test look at the
 // next case where we add some noisy so it actually does some iterations.
 TEST_F(BaFixture, TestBundleAdjustmentBatch) {
-    Discrete::Problem const problem{
-        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets_, frames_, true, camera_id_)};
+    auto const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, intrinsic_, targets_, frames_, true, camera_id_)};
 
-    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     auto const& [rig, cameras]{result};
@@ -111,10 +111,10 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
         frame_i.value = geometry::Log(testing_mocks::AddGaussianNoise(0.1, 0.1, SE3_i));
     }
 
-    Discrete::Problem const problem{
-        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets_, noisy_frames, true, camera_id_)};
+    auto const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, intrinsic_, targets_, noisy_frames, true, camera_id_)};
 
-    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
     auto const& [rig, cameras]{result};
@@ -148,7 +148,7 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
 
 TEST_F(BaFixture, TestToRigState) {
     std::map<AssetId, CameraState> camera_states{{camera_id_, {intrinsic_, Array6d::Zero()}}};
-    Discrete::Result data{camera_id_, frames_, camera_states};
+    BundleAdjustment::Result data{camera_id_, frames_, camera_states};
 
     // Single camera case - a special case where the rig_frame_asset_id is the came as the only camera state present.
     auto result{ToRigState(data)};
@@ -196,8 +196,8 @@ TEST_F(BaFixture, TestReprojectionError) {
     Frames const frames{{timestamp_ns, {Array6d::Zero()}}};
     TargetSamples const targets{{timestamp_ns, {{gt_pixels, gt_points}, {}}}};
 
-    Discrete::Problem const problem{
-        Discrete::SingleCamProblem(camera_info_, intrinsic_, targets, frames, false, camera_id_)};
+    auto const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, intrinsic_, targets, frames, false, camera_id_)};
 
     auto const residuals{EvaluateResiduals(problem)};
     EXPECT_EQ(std::size(residuals), 1);

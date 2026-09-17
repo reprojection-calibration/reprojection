@@ -80,10 +80,10 @@ struct fmt::formatter<reprojection::CameraState> {
 
 // TODO(Jack): Unit test!
 template <>
-struct fmt::formatter<reprojection::optimization::Discrete::Problem> {
+struct fmt::formatter<reprojection::optimization::BundleAdjustment::Problem> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
-    auto format(reprojection::optimization::Discrete::Problem const& problem, format_context& ctx) const {
+    auto format(reprojection::optimization::BundleAdjustment::Problem const& problem, format_context& ctx) const {
         auto out{format_to(ctx.out(),
                            "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
                            problem.rig.asset_id.value, std::size(problem.rig.frames), std::size(problem.observations))};
@@ -109,10 +109,10 @@ struct fmt::formatter<reprojection::optimization::Discrete::Problem> {
 };
 
 template <>
-struct fmt::formatter<reprojection::optimization::Discrete::Result> {
+struct fmt::formatter<reprojection::optimization::BundleAdjustment::Result> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
-    auto format(reprojection::optimization::Discrete::Result const& result, format_context& ctx) const {
+    auto format(reprojection::optimization::BundleAdjustment::Result const& result, format_context& ctx) const {
         auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
                            result.rig.asset_id.value, std::size(result.rig.frames))};
 

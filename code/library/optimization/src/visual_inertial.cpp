@@ -150,7 +150,7 @@ std::pair<VisualInertial::Result, CeresState> VisualInertialOpt(VisualInertial::
 // NOTE(Jack): There is something nice about using the same exact logic from the optimization (i.e. cost functions) when
 // calculating an optimization's residuals. That being said we eliminated a lot of code duplication by just using the
 // spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
-Discrete::Problem ToBaProblem(VisualInertial::Problem const& problem) {
+BundleAdjustment::Problem ToBaProblem(VisualInertial::Problem const& problem) {
     // NOTE(Jack): Something actually really important is happening here that is a result of the continuous spline
     // representation. And that is that observations which maybe did not have a matching discrete frame, and therefore
     // would have been ignored, can be handled here because the spline can interpolate the pose for any "on spline"
@@ -169,7 +169,7 @@ Discrete::Problem ToBaProblem(VisualInertial::Problem const& problem) {
         }
     }
 
-    return Discrete::Problem{problem.rig.asset_id, frames, problem.cameras, problem.observations};
+    return BundleAdjustment::Problem{problem.rig.asset_id, frames, problem.cameras, problem.observations};
 }
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,

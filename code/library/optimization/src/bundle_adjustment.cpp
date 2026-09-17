@@ -11,7 +11,7 @@ namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
-std::pair<Discrete::Result, CeresState> Discrete::Solve(Problem const& problem, int const num_threads) {
+std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem const& problem, int const num_threads) {
     // TODO(Jack): It is a little messy how we construct the result from just part of the problem, and then iterate over
     // the problem below but ignore the part that we copied to the result and use the result instead. Really not the end
     // of the world but I feel like I am missing the plotline.
@@ -54,7 +54,7 @@ std::pair<Discrete::Result, CeresState> Discrete::Solve(Problem const& problem, 
     return {result, ceres_state};
 }
 
-Discrete::Problem Discrete::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
+BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
                                             std::vector<CameraProblemInput> const& cams,
                                             uint64_t const approx_sync_delta_ns) {
     Problem problem{cam0_id, cam0_poses};
@@ -66,7 +66,7 @@ Discrete::Problem Discrete::MultiCamProblem(AssetId const& cam0_id, Frames const
 }  // LCOV_EXCL_LINE
 
 // TODO(Jack): Refactor this to use the AddCamera method! We repeate the observation iteration which is not so nice.
-Discrete::Problem Discrete::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                              TargetSamples const& targets, Frames const& frames,
                                              bool const optimize_intrinsic, AssetId const camera_id) {
     CameraProblemInput const cam0{
@@ -78,7 +78,7 @@ Discrete::Problem Discrete::SingleCamProblem(CameraInfo const& camera_info, Intr
     return MultiCamProblem(cam0.camera_id, frames, {cam0}, 0);
 }
 
-Discrete::Problem Discrete::SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
+BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                                Bundle const& bundle, Pose const& pose, bool const optimize_intrinsic) {
     uint64_t constexpr timestamp_ns{0};
     ExtractedTarget const target{bundle, {}};
@@ -93,7 +93,7 @@ Discrete::Problem Discrete::SingleFrameProblem(CameraInfo const& camera_info, In
 // are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
-void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
+void BundleAdjustment::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
     problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
                                                   {cam.intrinsic, cam.extrinsic},
                                                   {cam.optimize_intrinsic, cam.optimize_extrinsic}});
@@ -123,7 +123,7 @@ void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sy
     }
 }
 
-transforms::RigState ToRigState(Discrete::Result const& result) {
+transforms::RigState ToRigState(BundleAdjustment::Result const& result) {
     std::vector<Extrinsic> rig_cam_extrinsics;
     for (auto const& [camera_id, state_i] : result.camera_states) {
         // The Extrinsics() type does not allow self-connections/cycles!
@@ -145,7 +145,7 @@ transforms::RigState ToRigState(Discrete::Result const& result) {
     return transforms::RigState{result.rig.asset_id, result.rig.frames, transforms::Extrinsics{{rig_cam_extrinsics}}};
 }
 
-std::vector<ReprojectionError> EvaluateResiduals(Discrete::Problem const& ba_problem) {
+std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& ba_problem) {
     std::vector<ReprojectionError> errors;
     errors.reserve(std::size(ba_problem.observations));
 

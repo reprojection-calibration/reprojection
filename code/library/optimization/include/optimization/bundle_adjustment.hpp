@@ -8,7 +8,7 @@
 
 namespace reprojection::optimization {
 
-struct Discrete {
+struct BundleAdjustment {
     struct Problem {
         Problem(AssetId const rig_frame_asset_id, Frames const& rig_poses, std::map<AssetId, Camera> const& _cameras,
                 std::vector<Observation> const& _observations)
@@ -66,8 +66,8 @@ struct Discrete {
 
 // TODO(Jack): Does this function really belong here in this file? Or would it be better organized with more like minded
 // functions?
-transforms::RigState ToRigState(Discrete::Result const& result);
+transforms::RigState ToRigState(BundleAdjustment::Result const& result);
 
-std::vector<ReprojectionError> EvaluateResiduals(Discrete::Problem const& problem);
+std::vector<ReprojectionError> EvaluateResiduals(BundleAdjustment::Problem const& problem);
 
 }  // namespace reprojection::optimization

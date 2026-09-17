@@ -52,14 +52,15 @@ Hash StereoRigOpt::CacheKey() const {
 }
 
 void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    using Discrete = optimization::Discrete;
+    using BundleAdjustment = optimization::BundleAdjustment;
 
-    Discrete::Problem const problem{Discrete::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
-    auto const [result, ceres_state]{Discrete::Solve(problem, num_threads_)};
+    BundleAdjustment::Problem const problem{
+        BundleAdjustment::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, num_threads_)};
 
     database::RigStateInsert(db.get(), step_id, cam_target_ids_.at(cam0_id_), ToRigState(result));
 
-    Discrete::Problem const optimized_problem{problem, result.rig.frames, result.camera_states};
+    BundleAdjustment::Problem const optimized_problem{problem, result.rig.frames, result.camera_states};
     auto const errors{EvaluateResiduals(optimized_problem)};
     database::ReprojectionErrorsInsert(db.get(), step_id, cam_target_ids_, errors);
 

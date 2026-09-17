@@ -10,8 +10,6 @@
 
 namespace reprojection::pnp {
 
-using Discrete = optimization::Discrete;
-
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction
 // and are instead required to pass in the bounds and the Dlt23 functions returns a K matrix in the scale of the
@@ -54,9 +52,10 @@ PnpResult Pnp(Bundle const& bundle, std::optional<ImageBounds> bounds) {
 
     CameraInfo const camera_info{CameraModel::Pinhole, bounds.value()};
 
-    Discrete::Problem const problem{
-        Discrete::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
-    auto const [result, ceres_state]{Discrete::Solve(problem, 1)};
+    using BundleAdjustment = optimization::BundleAdjustment;
+    BundleAdjustment::Problem const problem{
+        BundleAdjustment::SingleFrameProblem(camera_info, pinhole_intrinsic, bundle, se3_co_w, false)};
+    auto const [result, ceres_state]{BundleAdjustment::Solve(problem, 1)};
     auto const& [rig, _1]{result};
 
     if (ceres_state.solver_summary.termination_type == ceres::CONVERGENCE) {
