@@ -53,12 +53,11 @@ struct VisualInertial {
 
     static std::pair<Result, CeresState> Solve(Problem const& problem, int num_threads);
 
+    // TODO(Jack): Unit test!
     static Problem MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
                                    Array6d const& se3_imu_rig, Vector3d const& gravity_w,
                                    std::vector<CameraProblemInput> const& cams, ImuSamples const& imu_data);
 
-    // TODO(Jack): Rename from cam to rig?
-    // TODO(Jack): I think this is only used for testing! Can we refactor this away?
     static Problem SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
                                     TargetSamples const& targets, spline::Se3Spline const& rig_spline,
                                     Array6d const& se3_imu_rig, Vector3d const& gravity_w, AssetId camera_id,

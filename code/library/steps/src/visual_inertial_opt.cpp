@@ -77,6 +77,7 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
                                                        ba_input_, imu_data_)};
     auto const [result, ceres_state]{optimization::VisualInertial::Solve(problem, num_threads_)};
 
+    // TODO(Jack): Add a logging formatter for the vi result.
     // TOOD(Jack): Should we add a constructor/factory that just lets us update the se3 part?
     Extrinsic const extrinsic_imu_rig{imu_id_, cam0_id_, result.inertial_state.se3_imu_rig};
     log->info("{{{}, 'extrinsic': {}, 'gravity': [{:.3f}], 'solver_summary': {}}}", StepLogInfo{Type(), step_id},

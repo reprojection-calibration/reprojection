@@ -61,6 +61,8 @@ void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
     database::ControlPointsInsert(db.get(), step_id, camera_id_, spline.ControlPoints());
     database::SplineInfoInsert(db.get(), step_id, camera_id_, spline.GetTimeHandler());
 
+    // Covert the visual inertial problem to a class bundle adjustment problem so we can use the normal discrete time
+    // db/logging functions.
     auto const vi_problem{optimization::VisualInertial::SingleCamProblem(
         camera_info_, intrinsic_, targets_, spline, Array6d::Zero(), Array3d::Zero(), camera_id_, {})};
     auto const ba_problem{optimization::ConvertProblem(vi_problem)};

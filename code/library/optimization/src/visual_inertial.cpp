@@ -144,17 +144,12 @@ void VisualInertial::AddCamera(CameraProblemInput const& cam, Problem& problem) 
     }
 }
 
-// NOTE(Jack): We build the canonical bundle adjustment problem here ONLY so we can use the standard bundle adjustment
-// reprojection error calculation.
-// WARN(Jack): There is something nice about using the same exact logic from the optimization (i.e. cost functions) when
-// calculating an optimization's residuals. That being said we eliminated a lot of code duplication by just using the
-// spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
 BundleAdjustment::Problem ConvertProblem(VisualInertial::Problem const& problem) {
     // NOTE(Jack): Something actually really important is happening here that is a result of the continuous spline
     // representation. And that is that observations which maybe did not have a matching discrete frame, and therefore
-    // would have been ignored, can be handled here because the spline can interpolate the pose for any "on spline"
-    // time. Note that this will be the rig frame pose and you will need the extrinsic to get it into the actualy camera
-    // frame the target observation comes from.
+    // would have been ignored in the classic 'approx sync case', can be handled here because the spline can interpolate
+    // the pose for any "on spline" time. Note that this will be the rig frame pose and you will need the extrinsic to
+    // get it into the actually camera frame the target observation comes from.
     Frames frames;
     for (auto const& [_, sample_timestamp_ns, _1, target] : problem.observations) {
         if (auto const tf_w_co{problem.rig.spline.Evaluate(sample_timestamp_ns, spline::DerivativeOrder::Null)}) {
