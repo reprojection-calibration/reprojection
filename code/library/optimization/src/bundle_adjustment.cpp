@@ -88,32 +88,6 @@ Discrete::Problem Discrete::SingleFrameProblem(CameraInfo const& camera_info, In
                             optimize_intrinsic, camera_id);
 }
 
-VisualInertial::Problem VisualInertial::MultiCamProblem(AssetId const& cam0_id, spline::Se3Spline const& rig_spline,
-                                                        Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                                        std::vector<CameraProblemInput> const& cams,
-                                                        ImuSamples const& imu_data) {
-    Problem problem{cam0_id, rig_spline, se3_imu_rig, gravity_w, imu_data};
-    for (auto const& cam_i : cams) {
-        AddCamera(cam_i, problem);
-    }
-
-    return problem;
-}  // LCOV_EXCL_LINE
-
-VisualInertial::Problem VisualInertial::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                                         TargetSamples const& targets,
-                                                         spline::Se3Spline const& rig_spline,
-                                                         Array6d const& se3_imu_rig, Vector3d const& gravity_w,
-                                                         AssetId const camera_id, ImuSamples const& imu_data) {
-    // NOTE(Jack): For the visual inertial extrinsic optimization we already have the intrinsic and cam extrinsic
-    // results so we do not need to optimize these further.
-    CameraProblemInput const cam0{
-        camera_id, camera_info, intrinsic, targets, Array6d::Zero(), false, false,
-    };
-
-    return MultiCamProblem(cam0.camera_id, rig_spline, se3_imu_rig, gravity_w, {cam0}, imu_data);
-}
-
 // NOTE(Jack): All observations get synced to the rig_poses. This means that there might be poses that only have one
 // target (i.e. the reference camera's target) and there might be non-reference camera observations that do not sync and
 // are therefore never used. This is a simplifying assumption and does not cost us much but prevents us from have to
@@ -146,18 +120,6 @@ void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sy
 
         // Remove it so a double match cannot happen.
         remaining_targets.erase(target_timestamps_it);
-    }
-}
-
-void VisualInertial::AddCamera(CameraProblemInput const& cam, Problem& problem) {
-    problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
-                                                  {cam.intrinsic, cam.extrinsic},
-                                                  {cam.optimize_intrinsic, cam.optimize_extrinsic}});
-
-    // NOTE(Jack): Here we do not need any time sync logic because we are using a spline! If the target it not found on
-    // the spline then that will be handled during the actual problem construction.
-    for (auto const& [timestamp_ns, target] : cam.targets) {
-        problem.observations.push_back({cam.camera_id, timestamp_ns, timestamp_ns, target.bundle});
     }
 }
 

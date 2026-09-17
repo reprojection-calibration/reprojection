@@ -1,7 +1,6 @@
-#include "optimization/visual_inertial_opt.hpp"
-
 #include <gtest/gtest.h>
 
+#include "optimization/visual_inertial.hpp"
 #include "spline/spline_init.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
