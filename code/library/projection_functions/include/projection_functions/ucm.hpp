@@ -14,8 +14,8 @@ namespace reprojection::projection_functions {
 struct Ucm {
     static int constexpr Size{4};
 
-    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, 0.5 * width, 0.5 * height, 0.5};
+    static Eigen::Array<double, Size, 1> Initialize(double const f, double const height, double const width) {
+        return {f, 0.5 * width, 0.5 * height, 0.5};
     }
 
     template <typename T>

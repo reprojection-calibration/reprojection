@@ -14,8 +14,8 @@ namespace reprojection::projection_functions {
 struct Pinhole {
     static int constexpr Size{3};
 
-    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, 0.5 * width, 0.5 * height};
+    static Eigen::Array<double, Size, 1> Initialize(double const f, double const height, double const width) {
+        return {f, 0.5 * width, 0.5 * height};
     }
 
     // NOTE(Jack): The following notation is used for all projection functions, but we put it here in the pinhole class

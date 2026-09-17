@@ -6,12 +6,9 @@
 
 namespace reprojection::calibration {
 
-// TODO(Jack): Should we do a "initialization strategy" struct?
-using CandidateGenerator = std::function<std::vector<double>(ExtractedTarget const&)>;
 using IntrinsicsInitializer = std::function<ArrayXd(double, double, double)>;
 
-std::pair<CandidateGenerator, IntrinsicsInitializer> SelectInitializationStrategy(CameraModel camera_model,
-                                                                                  double height, double width);
+IntrinsicsInitializer SelectInitializationStrategy(CameraModel camera_model);
 
 std::vector<double> EstimateCandidatesParabolaLine(ExtractedTarget const& target, double cx, double cy);
 

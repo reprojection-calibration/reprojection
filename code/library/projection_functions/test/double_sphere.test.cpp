@@ -82,7 +82,7 @@ TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereUnprojectInvalid) {
 }
 
 TEST(ProjectionFunctionsDoubleSphere, TestDoubleSphereIntialize) {
-    Array5d const result{projection_functions::DoubleSphere::Initialize(1200, 480, 720)};
+    Array5d const result{projection_functions::DoubleSphere::Initialize(600, 480, 720)};
     Array5d const gt_result{600, 360, 240, 0, 0.5};
 
     EXPECT_TRUE(result.isApprox(gt_result));
