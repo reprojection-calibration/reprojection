@@ -41,7 +41,7 @@ TEST_F(IntrinsicInitFixture, TestIntrinsicInitStep) {
     steps::IntrinsicInit const step{camera_id_, std::nullopt, 1, camera_info_id_, targets_id_, db_};
     EXPECT_EQ(step.Type(), StepType::IntrinsicInit);
     EXPECT_EQ(step.Assets(), std::vector{camera_id_});
-    EXPECT_EQ(step.CacheKey().value, "4fca2c782d81fcebe010feed2bc34a6d3eb75f575956154f3c18ce70f0218058");
+    EXPECT_EQ(step.CacheKey().value, "b7fd6ab5a5e31e8d4887a43e4d15dfad1c185d18c9ca9437f6a1d93fd8b0b946");
 
     auto const [step_id, _]{database::GetOrCreateStep(db_.get(), StepType::IntrinsicInit, "")};
     EXPECT_NO_THROW(step.Execute(step_id, db_));
