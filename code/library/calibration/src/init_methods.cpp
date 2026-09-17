@@ -25,42 +25,32 @@ auto const log{logging::Get("calibration")};
 
 }
 
-// TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
-// of targets sampled?
-std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            TargetSamples const& targets, int const num_threads) {
-    auto const [runner, initializer]{SelectInitializationStrategy(camera_model, height, width)};
+std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, std::optional<double> const& focal_length,
+                                            double const height, double const width, TargetSamples const& targets,
+                                            int const num_threads) {
+    // Generate all focal length initialization values. There is an automatic policy of (0 -> max(h,w)) or a
+    // configurable focal_length plus minus 0.5xfocal_length.
+    double const max_dim{std::max(height, width)};
+    double const min_focal_length{focal_length ? *focal_length * 0.5 : 0.0};
+    double const max_focal_length{focal_length ? *focal_length * 1.5 : max_dim};
 
-    // Generate all gamma estimates and sort them in ascending order.
-    std::vector<double> gammas;
-    for (auto const& target : targets | std::views::values) {
-        std::vector<double> const gammas_i{runner(target)};
-        gammas.insert(std::cend(gammas), std::cbegin(gammas_i), std::cend(gammas_i));
+    constexpr int num_samples{200};
+    std::vector<double> focal_lengths;
+    for (int i{0}; i < num_samples; ++i) {
+        double const t{static_cast<double>(i) / (num_samples - 1)};
+        focal_lengths.push_back(min_focal_length + (t * (max_focal_length - min_focal_length)));
     }
-    std::sort(std::begin(gammas), std::end(gammas));
 
     // Generate a subset of targets which we will use to test our intrinsic hypothesis with.
-    //
-    // TODO(Jack): Is 20 enough, too many, or too little?
-    // TODO(Jack): What if the set of selected targets has bad properties like too many outliers or other degnerate
-    // cases for a camera calibration bundle adjustment. How would the user be able to get around this point? We should
-    // offer the user the option to manually initialize the intrinsics.
     auto const target_subset{SampleMap(targets, 20)};
 
-    // Sample the gammas evenly (this narrows down how many evaluations we need to do) and calculate the residual from a
-    // pose only bundle adjustment using intrinsics initialized from the gamma value. The gamme which produces the
-    // lowest residual will be our choice as the best initialization value.
-    //
-    // TODO(Jack): What is the maximum number of samples we need to take here. At time of writing (09.07.2026) 500 seems
-    // like a lot and could slow the process down on a slow computer. We need to do some testing I think.
-    uint64_t const num_samples{std::min<uint64_t>(std::size(gammas), 500)};
+    // Evaluate small bundle adjustment problems for each provided focal length and pick the one that has the lowest
+    // cost.
+    auto const initializer{SelectInitializationStrategy(camera_model)};
     std::map<double, Intrinsic> cost_intrinsic_map;
-    for (uint64_t i{0}; i < num_samples; ++i) {
-        uint64_t const idx{i * std::size(gammas) / num_samples};
-
-        double const gamma_i{gammas[idx]};
+    for (auto const f_i : focal_lengths) {
         CameraInfo const camera_info{camera_model, {0, width, 0, height}};
-        Intrinsic const intrinsics_i{initializer(gamma_i, height, width)};
+        Intrinsic const intrinsics_i{initializer(f_i, height, width)};
 
         Frames const initial_poses{PoseInitialization(camera_info, target_subset, intrinsics_i)};
         // TODO(Jack): Is the required success rate used in this condition enough, too much, or too little?
@@ -68,19 +58,18 @@ std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, doub
             continue;  // LCOV_EXCL_LINE
         }
 
-        using BundleAdjustment = optimization::BundleAdjustment;
         // Do a bundle adjustment with the intrinsics constant and calculate the mean residual. Our hope is that the
         // intrinsic which will be the best initialization for the full optimization will produce the lowest mean
         // residual here on a subset of targets.
-        auto const problem{BundleAdjustment::SingleCamProblem(camera_info, intrinsics_i, target_subset, initial_poses,
-                                                              false, AssetId{0})};
-        auto const [_, ceres_state]{BundleAdjustment::Solve(problem, num_threads)};
+        auto const problem{optimization::BundleAdjustment::SingleCamProblem(camera_info, intrinsics_i, target_subset,
+                                                                            initial_poses, false, AssetId{0})};
+        auto const [_, ceres_state]{optimization::BundleAdjustment::Solve(problem, num_threads)};
 
         double const mean_residual{ceres_state.solver_summary.final_cost / ceres_state.solver_summary.num_residuals};
         cost_intrinsic_map[mean_residual] = intrinsics_i;
 
-        log->debug("{{ 'idx': {}, 'gamma': {}, 'mean_residual': {}, 'num_frames_used': {}}}", idx, gamma_i,
-                   mean_residual, std::size(initial_poses));
+        log->debug("{{'focal_length': {}, 'mean_residual': {}, 'num_frames_used': {}}}", f_i, mean_residual,
+                   std::size(initial_poses));
     }
 
     if (std::size(cost_intrinsic_map) == 0) {

@@ -34,6 +34,7 @@ struct Config {
         CameraModel camera_model;
         int index;
         std::string sensor_name;
+        std::optional<double> focal_length{std::nullopt};
     };
 
     struct Imu {

@@ -115,8 +115,8 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
             target_info_id, context.assets.target.id, db};
         StepId const targets_id{RunStep<steps::FeatureExtraction>(context.workflow_id, feature_extraction, db)};
 
-        steps::IntrinsicInit const intrinsic_init{camera.id, context.application.threads, camera_info_id, targets_id,
-                                                  db};
+        steps::IntrinsicInit const intrinsic_init{
+            camera.id, camera.config.focal_length, context.application.threads, camera_info_id, targets_id, db};
         StepId const intrinsic_init_id{RunStep<steps::IntrinsicInit>(context.workflow_id, intrinsic_init, db)};
 
         steps::PoseInit const pose_init{camera.id, targets_id, camera_info_id, intrinsic_init_id, db};

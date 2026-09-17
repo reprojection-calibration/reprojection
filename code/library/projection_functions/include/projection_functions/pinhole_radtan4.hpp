@@ -14,9 +14,8 @@ namespace reprojection::projection_functions {
 struct PinholeRadtan4 {
     static int constexpr Size{7};
 
-    // TODO(Jack): Is there a more sophisticated way required to initialize the distortion components here?
-    static Eigen::Array<double, Size, 1> Initialize(double const gamma, double const height, double const width) {
-        return {gamma, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
+    static Eigen::Array<double, Size, 1> Initialize(double const f, double const height, double const width) {
+        return {f, 0.5 * width, 0.5 * height, 0, 0, 0, 0};
     }
 
     /**
