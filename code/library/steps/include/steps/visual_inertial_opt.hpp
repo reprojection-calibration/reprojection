@@ -1,6 +1,5 @@
 #pragma once
 
-#include "optimization/types.hpp"
 #include "spline/se3_spline.hpp"
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
