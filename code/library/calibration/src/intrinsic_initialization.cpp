@@ -25,6 +25,6 @@ IntrinsicsInitializer SelectInitializationStrategy(CameraModel const camera_mode
     }
 
     return initializer;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace reprojection::calibration
