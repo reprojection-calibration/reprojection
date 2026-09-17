@@ -51,7 +51,7 @@ Config::Camera Config::Camera::Parse(toml::table const& table, int const index) 
     config.sensor_name = Require<std::string>(table, "sensor_name");
 
     // Optional keys
-    OverrideIfPresent(table, "focal_length", *config.focal_length);
+    config.focal_length = Optional<double>(table, "focal_length");
 
     return config;
 }
