@@ -63,7 +63,7 @@ void SplineInit::Execute(StepId const step_id, SqlitePtr const db) const {
 
     auto const vi_problem{optimization::VisualInertial::SingleCamProblem(
         camera_info_, intrinsic_, targets_, spline, Array6d::Zero(), Array3d::Zero(), camera_id_, {})};
-    auto const ba_problem{optimization::ToBaProblem(vi_problem)};
+    auto const ba_problem{optimization::ConvertProblem(vi_problem)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
     database::CameraPosesInsert(db.get(), step_id, targets_id_, camera_id_, ba_problem.rig.frames);

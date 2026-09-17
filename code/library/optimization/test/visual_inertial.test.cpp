@@ -84,7 +84,7 @@ TEST(OptimizationVisualInertialOpt, TestReprojectionErrorSpline) {
         camera_info, intrinsic, targets, spline, Array6d::Zero(), Array3d::Zero(), camera_id, {})};
 
     // Build the problem and calculate the residuals!
-    auto const ba_problem{optimization::ToBaProblem(vi_problem)};
+    auto const ba_problem{optimization::ConvertProblem(vi_problem)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
     EXPECT_EQ(std::size(ba_problem.rig.frames), 1);

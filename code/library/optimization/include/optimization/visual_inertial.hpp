@@ -70,7 +70,7 @@ struct VisualInertial {
 
 // NOTE(Jack): We convert the continuous problem to the discrete problem so that we can use the same reprojection error
 // calculation function for both cases.
-BundleAdjustment::Problem ToBaProblem(VisualInertial::Problem const& problem);
+BundleAdjustment::Problem ConvertProblem(VisualInertial::Problem const& problem);
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,
                            spline::Se3Spline const& spline_w_co);

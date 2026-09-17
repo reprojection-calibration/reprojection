@@ -88,7 +88,7 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
 
     // Diagnostic output - reprojection errors
     VisualInertial::Problem const optimized_problem{problem, result.rig, result.inertial_state, result.camera_states};
-    auto const ba_problem{optimization::ToBaProblem(optimized_problem)};
+    auto const ba_problem{optimization::ConvertProblem(optimized_problem)};
     auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
