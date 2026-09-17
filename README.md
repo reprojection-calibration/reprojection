@@ -141,6 +141,3 @@ from a TUM-VIO calibration sequence.
 
     git lfs pull
 
-
-* REFACTOR: VisualInertialOpt to use all cameras
-* RENAME: InitializeCamCamExtrinsic -> StereoExtrinsicInit
