@@ -141,7 +141,7 @@ app.layout = html.Div(
                                     id="sync-max-offset",
                                     type="number",
                                     min=0,
-                                    value=20,
+                                    value=3,
                                     debounce=True,
                                 ),
                                 html.P(
