@@ -21,8 +21,6 @@ struct CameraProblemInput {
     bool optimize_extrinsic{false};
 };
 
-
-
 struct CameraState {
     Intrinsic intrinsic;
     // TODO(Jack): Frame order convention! Should we use the extrinsic type here? One reason that we do not is that
@@ -56,4 +54,4 @@ struct InertialState {
     Vector3d gravity_w;
 };
 
-}  // namespace reprojection::optimization::bundle_adjustment
+}  // namespace reprojection

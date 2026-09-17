@@ -55,8 +55,8 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
 }
 
 BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_id, Frames const& cam0_poses,
-                                            std::vector<CameraProblemInput> const& cams,
-                                            uint64_t const approx_sync_delta_ns) {
+                                                            std::vector<CameraProblemInput> const& cams,
+                                                            uint64_t const approx_sync_delta_ns) {
     Problem problem{cam0_id, cam0_poses};
     for (auto const& cam_i : cams) {
         AddCamera(cam_i, approx_sync_delta_ns, problem);
@@ -67,8 +67,8 @@ BundleAdjustment::Problem BundleAdjustment::MultiCamProblem(AssetId const& cam0_
 
 // TODO(Jack): Refactor this to use the AddCamera method! We repeate the observation iteration which is not so nice.
 BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                             TargetSamples const& targets, Frames const& frames,
-                                             bool const optimize_intrinsic, AssetId const camera_id) {
+                                                             TargetSamples const& targets, Frames const& frames,
+                                                             bool const optimize_intrinsic, AssetId const camera_id) {
     CameraProblemInput const cam0{
         camera_id, camera_info, intrinsic, targets, Array6d::Zero(), optimize_intrinsic, false,
     };
@@ -78,8 +78,9 @@ BundleAdjustment::Problem BundleAdjustment::SingleCamProblem(CameraInfo const& c
     return MultiCamProblem(cam0.camera_id, frames, {cam0}, 0);
 }
 
-BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info, Intrinsic const& intrinsic,
-                                               Bundle const& bundle, Pose const& pose, bool const optimize_intrinsic) {
+BundleAdjustment::Problem BundleAdjustment::SingleFrameProblem(CameraInfo const& camera_info,
+                                                               Intrinsic const& intrinsic, Bundle const& bundle,
+                                                               Pose const& pose, bool const optimize_intrinsic) {
     uint64_t constexpr timestamp_ns{0};
     ExtractedTarget const target{bundle, {}};
     AssetId const camera_id{0};
