@@ -60,7 +60,7 @@ global.dash_clientside = {Patch: class {
 }};
 """
         script += (
-            "const renderAll = ("
+            "const renderCameras = ("
             + clientside_function(dashboard.callbacks.extracted_targets)
             + ");\n"
         )
@@ -72,6 +72,8 @@ global.dash_clientside = {Patch: class {
         script += "const targets = " + json.dumps([target]) + ";\n"
         script += "const data = " + json.dumps(payload) + ";\n"
         script += """
+const renderAll = (indices, targets, step, data, max, stage, id) =>
+    renderCameras(indices, targets, step, data, max, stage, [id])[0];
 const render = (index, targets, step, data, max, id) =>
     renderAll([index], targets, step, data, [max], 'single_cam', id);
 const patch = render(0, targets, 30, data, 10, {asset_id: 1});
@@ -101,6 +103,24 @@ frames[0].time_basis = 'playback';
 const earlier = renderAll([0], frames, 30, data, [10], 'cam_imu', {asset_id: 1});
 assert.match(earlier['layout.title.text'], /Δt \\(playback\\) = -5.000000 ms/);
 assert.equal(timestamp(0, frames), '1700000000005000001');
+
+// One slider event must advance BOTH output figures, including their colour scale.
+const pairedFrames = [0, 1].map(index => ({
+    timestamp_ns: targets[0].timestamp_ns, time_basis: 'frame',
+    cameras: Object.fromEntries([1, 2].map(asset_id => [asset_id, {
+        ...targets[0], asset_id,
+        data: {...targets[0].data, pixels: [[100 * asset_id + index, 60]]}
+    }]))
+}));
+for (const stage of ['multi_cam', 'cam_imu']) {
+    for (const index of [0, 1]) {
+        const patches = renderCameras([index], pairedFrames, 30, data, [20], stage,
+            [{asset_id: 1}, {asset_id: 2}]);
+        assert.equal(patches.length, 2);
+        assert.deepEqual(patches.map(p => p['data.0.x']), [[100 + index], [200 + index]]);
+        assert.deepEqual(patches.map(p => p['data.0.marker'].cmax), [20, 20]);
+    }
+}
 """
         subprocess.run(
             [shutil.which("node"), "-e", script],
