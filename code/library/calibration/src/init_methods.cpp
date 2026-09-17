@@ -25,7 +25,7 @@ auto const log{logging::Get("calibration")};
 
 }
 
-using Discrete = optimization::bundle_adjustment::Discrete;
+using Discrete = optimization::Discrete;
 
 // TODO(Jack): Should we parameterize the minimum number of samples (num_samples) and should we parameterize the number
 // of targets sampled?

@@ -5,6 +5,7 @@
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/io.hpp"
+#include "types/optimization_types.hpp"
 #include "types/transform_types.hpp"
 
 namespace reprojection::steps {
@@ -45,7 +46,7 @@ struct VisualInertialOpt {
     // NOTE(Jack): We need to store these correspondences so we can satisfy the database foreign key constraints on
     // reprojection error. If this is a long term strategy time will tell!
     std::map<AssetId, StepId> cam_target_ids_;
-    std::vector<optimization::CameraProblemInput> ba_input_;
+    std::vector<CameraProblemInput> ba_input_;
 
     int num_threads_;
 };

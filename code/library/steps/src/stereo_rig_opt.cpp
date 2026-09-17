@@ -36,15 +36,8 @@ StereoRigOpt::StereoRigOpt(AssetId const cam0_id, std::vector<CamStageIds> const
         auto const extrinsic{
             ValueOrExit(database::ExtrinsicSelect(db.get(), extrinsic_init_id, cam_i.asset_id, cam0_id_), log)};
 
-        ba_input_.emplace_back(optimization::CameraProblemInput{
-            cam_i.asset_id,
-            camera_info,
-            intrinsic,
-            targets,
-            extrinsic.se3_a_b,
-            false,
-            not is_reference_cam,
-        });
+        ba_input_.emplace_back(CameraProblemInput{cam_i.asset_id, camera_info, intrinsic, targets, extrinsic.se3_a_b,
+                                                  false, not is_reference_cam});
     }
 }
 
@@ -59,7 +52,7 @@ Hash StereoRigOpt::CacheKey() const {
 }
 
 void StereoRigOpt::Execute(StepId step_id, SqlitePtr const db) const {
-    using namespace optimization::bundle_adjustment;
+    using Discrete = optimization::Discrete;
 
     Discrete::Problem const problem{Discrete::MultiCamProblem(cam0_id_, rig_poses_, ba_input_, approx_sync_delta_ns_)};
     auto const [result, ceres_state]{Discrete::Solve(problem, num_threads_)};

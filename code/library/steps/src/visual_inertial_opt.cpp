@@ -16,7 +16,7 @@ auto const log{logging::Get("steps")};
 
 }
 
-using VisualInertial = optimization::bundle_adjustment::VisualInertial;
+using VisualInertial = optimization::VisualInertial;
 
 VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data_id, AssetId const cam0_id,
                                      std::vector<CamStageIds> const& cams, StepId const spline_id,
@@ -55,8 +55,8 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
                 ValueOrExit(database::ExtrinsicSelect(db.get(), stereo_rig_opt_id, cam_i.asset_id, cam0_id_), log);
         }
 
-        ba_input_.emplace_back(optimization::CameraProblemInput{cam_i.asset_id, camera_info, intrinsic, targets,
-                                                                extrinsic.se3_a_b, false, false});
+        ba_input_.emplace_back(
+            CameraProblemInput{cam_i.asset_id, camera_info, intrinsic, targets, extrinsic.se3_a_b, false, false});
     }
 }
 
@@ -89,7 +89,7 @@ void VisualInertialOpt::Execute(StepId step_id, SqlitePtr const db) const {
     // Diagnostic output - reprojection errors
     VisualInertial::Problem const optimized_problem{problem, result.rig, result.inertial_state, result.camera_states};
     auto const ba_problem{optimization::ToBaProblem(optimized_problem)};
-    auto const residuals{optimization::bundle_adjustment::EvaluateResiduals(ba_problem)};
+    auto const residuals{optimization::EvaluateResiduals(ba_problem)};
 
     // TODO(Jack): One day if we adopt a spline optimization Result type we can add a transform function to RigState
     // here like we do for the regular bundle adjustment.

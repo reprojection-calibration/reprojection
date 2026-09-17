@@ -69,10 +69,10 @@ struct fmt::formatter<reprojection::transforms::RigState> {
 };
 
 template <>
-struct fmt::formatter<reprojection::optimization::bundle_adjustment::CameraState> {
+struct fmt::formatter<reprojection::CameraState> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
-    auto format(reprojection::optimization::bundle_adjustment::CameraState const& state, format_context& ctx) const {
+    auto format(reprojection::CameraState const& state, format_context& ctx) const {
         return format_to(ctx.out(), "{{'intrinsic': [{:.3f}], 'extrinsic': [{:.3f}]}}",
                          join(state.intrinsic.value, ", "), join(state.extrinsic, ", "));
     }
@@ -80,11 +80,10 @@ struct fmt::formatter<reprojection::optimization::bundle_adjustment::CameraState
 
 // TODO(Jack): Unit test!
 template <>
-struct fmt::formatter<reprojection::optimization::bundle_adjustment::Discrete::Problem> {
+struct fmt::formatter<reprojection::optimization::Discrete::Problem> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
-    auto format(reprojection::optimization::bundle_adjustment::Discrete::Problem const& problem,
-                format_context& ctx) const {
+    auto format(reprojection::optimization::Discrete::Problem const& problem, format_context& ctx) const {
         auto out{format_to(ctx.out(),
                            "{{'rig_frame_asset_id': {}, 'num_rig_poses': {}, 'num_observations': {}, 'cameras': [",
                            problem.rig.asset_id.value, std::size(problem.rig.frames), std::size(problem.observations))};
@@ -110,11 +109,10 @@ struct fmt::formatter<reprojection::optimization::bundle_adjustment::Discrete::P
 };
 
 template <>
-struct fmt::formatter<reprojection::optimization::bundle_adjustment::Discrete::Result> {
+struct fmt::formatter<reprojection::optimization::Discrete::Result> {
     constexpr auto parse(format_parse_context const& ctx) { return std::cbegin(ctx); }
 
-    auto format(reprojection::optimization::bundle_adjustment::Discrete::Result const& result,
-                format_context& ctx) const {
+    auto format(reprojection::optimization::Discrete::Result const& result, format_context& ctx) const {
         auto out{format_to(ctx.out(), "{{'rig_frame_asset_id': {}, 'num_poses': {}, 'camera_states': [",
                            result.rig.asset_id.value, std::size(result.rig.frames))};
 

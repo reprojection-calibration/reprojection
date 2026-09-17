@@ -31,7 +31,7 @@ BundleAdjustment::BundleAdjustment(AssetId const camera_id, StepId const targets
 Hash BundleAdjustment::CacheKey() const { return hashing::HashArgs(camera_info_, targets_, intrinsic_, camera_poses_); }
 
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
-    using namespace optimization::bundle_adjustment;
+    using Discrete = optimization::Discrete;
 
     auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
 

@@ -10,7 +10,7 @@
 
 namespace reprojection::pnp {
 
-using namespace optimization::bundle_adjustment;
+using Discrete = optimization::Discrete;
 
 // WARN(Jack): When doing the Dlt22 you are restricted to being in unit image coordinates, therefore we hard code
 // the intrinsics and bounds for that case. If however you are doing the Dlt23 case you do not have this distinction

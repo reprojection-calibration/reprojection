@@ -8,9 +8,10 @@
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
 #include "types/calibration_types.hpp"
+#include "types/optimization_types.hpp"
 
 using namespace reprojection;
-using namespace optimization::bundle_adjustment;
+using Discrete = optimization::Discrete;
 
 class BaFixture : public ::testing::Test {
    protected:
@@ -31,7 +32,7 @@ class BaFixture : public ::testing::Test {
 TEST_F(BaFixture, TestMultiCam) {
     // NOTE(Jack): The real meat and potatoes of this test is that we initialize the second and third cam with random
     // non zero extrinsic. We then assert that we recover the identity extrinsic after the optimization.
-    std::vector<optimization::CameraProblemInput> const cams{
+    std::vector<CameraProblemInput> const cams{
         {camera_id_, camera_info_, intrinsic_, targets_, Array6d::Zero(), true, false},
         {AssetId{2}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
         {AssetId{3}, camera_info_, intrinsic_, targets_, Array6d::Random(), true, true},
@@ -146,8 +147,7 @@ TEST_F(BaFixture, TestNoisyBundleAdjustment) {
 }
 
 TEST_F(BaFixture, TestToRigState) {
-    std::map<AssetId, optimization::bundle_adjustment::CameraState> camera_states{
-        {camera_id_, {intrinsic_, Array6d::Zero()}}};
+    std::map<AssetId, CameraState> camera_states{{camera_id_, {intrinsic_, Array6d::Zero()}}};
     Discrete::Result data{camera_id_, frames_, camera_states};
 
     // Single camera case - a special case where the rig_frame_asset_id is the came as the only camera state present.

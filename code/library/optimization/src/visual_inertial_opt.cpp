@@ -13,9 +13,9 @@
 
 namespace reprojection::optimization {
 
-std::pair<bundle_adjustment::VisualInertial::Result, CeresState> VisualInertialOpt(
-    bundle_adjustment::VisualInertial::Problem const& problem, int num_threads) {
-    bundle_adjustment::VisualInertial::Result result{problem};
+std::pair<VisualInertial::Result, CeresState> VisualInertialOpt(VisualInertial::Problem const& problem,
+                                                                int num_threads) {
+    VisualInertial::Result result{problem};
     auto& spline{result.rig.spline};
 
     // TODO(Jack): What is the correct linear solver?
@@ -112,7 +112,7 @@ std::pair<bundle_adjustment::VisualInertial::Result, CeresState> VisualInertialO
 // NOTE(Jack): There is something nice about using the same exact logic from the optimization (i.e. cost functions) when
 // calculating an optimization's residuals. That being said we eliminated a lot of code duplication by just using the
 // spline.Evaluate() interface and filling out the canonical bundle adjustment problem here.
-bundle_adjustment::Discrete::Problem ToBaProblem(bundle_adjustment::VisualInertial::Problem const& problem) {
+Discrete::Problem ToBaProblem(VisualInertial::Problem const& problem) {
     // NOTE(Jack): Something actually really important is happening here that is a result of the continuous spline
     // representation. And that is that observations which maybe did not have a matching discrete frame, and therefore
     // would have been ignored, can be handled here because the spline can interpolate the pose for any "on spline"
@@ -131,7 +131,7 @@ bundle_adjustment::Discrete::Problem ToBaProblem(bundle_adjustment::VisualInerti
         }
     }
 
-    return bundle_adjustment::Discrete::Problem{problem.rig.asset_id, frames, problem.cameras, problem.observations};
+    return Discrete::Problem{problem.rig.asset_id, frames, problem.cameras, problem.observations};
 }
 
 ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsic, Vector3d const& gravity,

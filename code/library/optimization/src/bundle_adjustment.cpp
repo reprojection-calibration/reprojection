@@ -7,7 +7,7 @@
 #include "cost_functions/reprojection_error.hpp"
 #include "time_sync/time_sync.hpp"
 
-namespace reprojection::optimization::bundle_adjustment {
+namespace reprojection::optimization {
 
 // ERROR(Jack): What is a frame has too few valid pixels to actually constrain the pose? Should we entirely skip
 // that frame? Or what if in general we have a minimum required of points per frame threshold?
@@ -120,9 +120,9 @@ VisualInertial::Problem VisualInertial::SingleCamProblem(CameraInfo const& camer
 // implement a more intricate "changing reference camera" problem construction logic. Maybe we are just missing the
 // abstraction to do that simply?
 void Discrete::AddCamera(CameraProblemInput const& cam, uint64_t const approx_sync_delta_ns, Problem& problem) {
-    problem.cameras.emplace(cam.camera_id, bundle_adjustment::Camera{cam.camera_info,  // LCOV_EXCL_LINE
-                                                                     {cam.intrinsic, cam.extrinsic},
-                                                                     {cam.optimize_intrinsic, cam.optimize_extrinsic}});
+    problem.cameras.emplace(cam.camera_id, Camera{cam.camera_info,  // LCOV_EXCL_LINE
+                                                  {cam.intrinsic, cam.extrinsic},
+                                                  {cam.optimize_intrinsic, cam.optimize_extrinsic}});
 
     auto const timestamps{cam.targets | std::views::keys};
     std::set<uint64_t> remaining_targets{std::cbegin(timestamps), std::cend(timestamps)};
@@ -222,4 +222,4 @@ std::vector<ReprojectionError> EvaluateResiduals(Discrete::Problem const& ba_pro
     return errors;
 }
 
-}  // namespace reprojection::optimization::bundle_adjustment
+}  // namespace reprojection::optimization

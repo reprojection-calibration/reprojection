@@ -28,7 +28,7 @@ PoseInit::PoseInit(AssetId camera_id, StepId targets_id, StepId camera_info_id, 
 Hash PoseInit::CacheKey() const { return hashing::HashArgs(targets_, camera_info_, intrinsic_); }
 
 void PoseInit::Execute(StepId step_id, SqlitePtr const db) const {
-    using namespace optimization::bundle_adjustment;
+    using Discrete = optimization::Discrete;
 
     Frames const camera_poses{calibration::PoseInitialization(camera_info_, targets_, intrinsic_)};
 

@@ -36,7 +36,7 @@ struct StereoRigOpt {
     // NOTE(Jack): We need to store these correspondences so we can satisfy the database foreign key constraints on
     // reprojection error. If this is a long term strategy time will tell!
     std::map<AssetId, StepId> cam_target_ids_;
-    std::vector<optimization::CameraProblemInput> ba_input_;
+    std::vector<CameraProblemInput> ba_input_;
     // TODO(Jack): Naming inconsistency between cam0 and rig!
     Frames rig_poses_;
     int num_threads_;
