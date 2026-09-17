@@ -1,6 +1,7 @@
+#include "optimization/visual_inertial.hpp"
+
 #include <gtest/gtest.h>
 
-#include "optimization/visual_inertial.hpp"
 #include "spline/spline_init.hpp"
 #include "testing_mocks/data_generators.hpp"
 #include "testing_utilities/constants.hpp"
@@ -42,7 +43,7 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
     auto const problem{optimization::VisualInertial::SingleCamProblem(camera_info, {tu::pinhole_intrinsics}, targets,
                                                                       spline_w_co, initial_se3_imu_rig, initial_gravity,
                                                                       AssetId{0}, imu_data)};
-    auto const [result, ceres_state]{optimization::VisualInertialOpt(problem, 1)};
+    auto const [result, ceres_state]{optimization::VisualInertial::Solve(problem, 1)};
 
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
     EXPECT_TRUE(result.inertial_state.se3_imu_rig.isApprox(initial_se3_imu_rig, 1e-2));

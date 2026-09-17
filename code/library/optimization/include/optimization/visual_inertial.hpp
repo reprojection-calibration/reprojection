@@ -68,9 +68,6 @@ struct VisualInertial {
     static void AddCamera(CameraProblemInput const& cam, Problem& problem);
 };
 
-std::pair<VisualInertial::Result, CeresState> VisualInertialOpt(VisualInertial::Problem const& problem,
-                                                                int num_threads);
-
 // NOTE(Jack): We convert the continuous problem to the discrete problem so that we can use the same reprojection error
 // calculation function for both cases.
 BundleAdjustment::Problem ToBaProblem(VisualInertial::Problem const& problem);
