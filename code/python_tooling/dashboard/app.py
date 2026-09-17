@@ -119,11 +119,12 @@ app.layout = html.Div(
                                     clearable=False,
                                 ),
                             ],
+                            id="camera-selection-control",
                             className="camera-control",
                         ),
                         html.Div(
                             [
-                                html.Label("Compare camera results"),
+                                html.Label("Compare results"),
                                 dcc.RadioItems(
                                     id="step-selector",
                                     options=[],
@@ -131,6 +132,25 @@ app.layout = html.Div(
                                     className="result-selector",
                                 ),
                             ],
+                            className="result-control",
+                        ),
+                        html.Div(
+                            [
+                                html.Label("Maximum sample offset (ms)"),
+                                dcc.Input(
+                                    id="sync-max-offset",
+                                    type="number",
+                                    min=0,
+                                    value=3,
+                                    debounce=True,
+                                ),
+                                html.P(
+                                    "Nearest sample within this distance of playback time; otherwise the camera is blank.",
+                                    className="muted",
+                                ),
+                            ],
+                            id="sync-controls",
+                            style={"display": "none"},
                             className="result-control",
                         ),
                     ],

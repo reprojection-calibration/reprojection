@@ -261,6 +261,10 @@ def construct_staged_visualization_db(db_path):
             "INSERT INTO camera_poses SELECT 60, source_step_id, asset_id, timestamp_ns, rx, ry, rz, x, y, z FROM camera_poses WHERE step_id=30"
         )
         conn.execute(
-            "INSERT INTO reprojection_errors SELECT 60, source_step_id, asset_id, sample_timestamp_ns, frame_timestamp_ns, data FROM reprojection_errors WHERE step_id=30"
+            "INSERT INTO reprojection_errors SELECT 60, source_step_id, asset_id, sample_timestamp_ns, frame_timestamp_ns, data FROM reprojection_errors WHERE step_id IN (30, 31)"
+        )
+        conn.execute("INSERT INTO asset_groups(signature) VALUES ('1|2|4|')")
+        conn.execute(
+            "UPDATE workflow_steps SET asset_group_signature='1|2|4|' WHERE step_id=60"
         )
         assert not conn.execute("PRAGMA foreign_key_check").fetchall()

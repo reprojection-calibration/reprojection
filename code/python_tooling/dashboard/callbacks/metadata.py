@@ -1,8 +1,13 @@
-from dash import Input, Output
+from dash import Input, Output, html
 
 from dashboard.server import app
-from dashboard.tools.metadata import build_sensor_metadata_layout, step_selector_options
+from dashboard.tools.metadata import (
+    build_sensor_metadata_layout,
+    result_selector_options,
+    step_selector_options,
+)
 from dashboard.tools.results import build_result_summary
+from dashboard.tools.workflow import camera_label, result_step_ids, stage_cameras
 
 
 @app.callback(
@@ -15,6 +20,27 @@ from dashboard.tools.results import build_result_summary
     Input("stage-selector", "value"),
 )
 def update_sensor_metadata(asset_id, metadata, workflow_data, stage_id):
+    if stage_id in ("multi_cam", "cam_imu"):
+        cameras = stage_cameras(metadata, stage_id)
+        available = set().union(
+            *(result_step_ids(metadata, camera["id"], stage_id) for camera in cameras)
+        )
+        options, value = result_selector_options(metadata or {}, available)
+        return (
+            [
+                html.Div(
+                    [
+                        html.H3(camera_label(camera)),
+                        *build_sensor_metadata_layout(
+                            camera["id"], metadata, workflow_data
+                        ),
+                    ]
+                )
+                for camera in cameras
+            ],
+            options,
+            value,
+        )
     options, value = step_selector_options(asset_id, metadata, stage_id)
     return (
         build_sensor_metadata_layout(asset_id, metadata, workflow_data),
@@ -32,4 +58,11 @@ def update_sensor_metadata(asset_id, metadata, workflow_data, stage_id):
     Input("stage-selector", "value"),
 )
 def update_result_summary(asset_id, step_id, metadata, workflow_data, stage_id):
-    return build_result_summary(asset_id, step_id, metadata, workflow_data, stage_id)
+    return build_result_summary(
+        asset_id,
+        step_id,
+        metadata,
+        workflow_data,
+        stage_id,
+        all_cameras=stage_id in ("multi_cam", "cam_imu"),
+    )

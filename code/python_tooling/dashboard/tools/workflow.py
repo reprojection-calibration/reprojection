@@ -34,7 +34,7 @@ STAGES = (
     Stage(
         "cam_imu",
         "Visual-inertial",
-        "Combine the reference camera's individual calibration with IMU measurements: fit a motion spline, initialize alignment, then optimize.",
+        "Combine the calibrated cameras with IMU measurements: fit a motion spline, initialize alignment, then optimize using all cameras.",
         (
             "imu_data_loading",
             "spline_init",
@@ -99,9 +99,7 @@ def stage_available(metadata, stage_id):
 def stage_cameras(metadata, stage_id):
     if not stage_available(metadata, stage_id):
         return []
-    cameras = assets_of_type(metadata, "camera")
-    # Calibrate() uses cam_stages.front() for visual-inertial calibration.
-    return cameras[:1] if stage_id == "cam_imu" else cameras
+    return assets_of_type(metadata, "camera")
 
 
 def result_step_ids(metadata, asset_id, stage_id=None):
@@ -201,11 +199,14 @@ def build_stage_overview(stage_id, metadata):
         content.append(html.Div(cards, className="camera-progress-list"))
     elif cameras:
         reference = camera_label(cameras[0])
-        note = f"Reference: {reference}. Rig poses are shown on this camera; choose another camera to inspect its reprojection errors."
+        note = f"Reference: {reference}. All cameras' extracted features and reprojection errors share one playback control. Rig motion is shown in the reference camera frame. Δt is sample time minus frame / playback time."
+        if stage_id == "multi_cam":
+            note += " Stereo samples are grouped by their recorded frame timestamps."
         if stage_id == "cam_imu":
             imu_names = ", ".join(
                 asset["name"] for asset in assets_of_type(metadata, "imu")
             )
-            note = f"Reference: {reference}. IMU: {imu_names}. This stage uses the individual camera calibration, not the stereo rig result."
+            note += f" IMU: {imu_names}."
+            note += " Playback visits every camera sample time and shows each camera's nearest sample within the maximum offset. Cameras without a nearby sample are blank; samples may appear at multiple playback times."
         content.append(html.P(note, className="stage-note"))
     return content
