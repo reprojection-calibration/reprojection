@@ -1,8 +1,8 @@
 from dash import MATCH, Input, Output, State
 
 from dashboard.server import app
-from dashboard.tools.selection import selected_targets
 from dashboard.tools.playback import synchronized_targets
+from dashboard.tools.selection import selected_targets
 from dashboard.tools.workflow import stage_cameras
 
 

@@ -1,8 +1,8 @@
 import unittest
 from tempfile import NamedTemporaryFile
 
+from dashboard.callbacks.metadata import update_result_summary, update_sensor_metadata
 from dashboard.callbacks.populate_sensor_panel import render_sensor_panel
-from dashboard.callbacks.metadata import update_sensor_metadata, update_result_summary
 from dashboard.callbacks.slider import update_selected_targets
 from dashboard.callbacks.workflow import update_stage_controls
 from dashboard.tools.data_loading import load_database, refresh_sensor_list

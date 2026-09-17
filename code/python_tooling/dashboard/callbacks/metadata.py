@@ -3,11 +3,11 @@ from dash import Input, Output, html
 from dashboard.server import app
 from dashboard.tools.metadata import (
     build_sensor_metadata_layout,
-    step_selector_options,
     result_selector_options,
+    step_selector_options,
 )
 from dashboard.tools.results import build_result_summary
-from dashboard.tools.workflow import stage_cameras, result_step_ids, camera_label
+from dashboard.tools.workflow import camera_label, result_step_ids, stage_cameras
 
 
 @app.callback(
