@@ -1,9 +1,6 @@
 #include "intrinsic_initialization.hpp"
 
-#include "camera_pose_init.hpp"
-#include "parabola_line_initialization.hpp"
-#include "utilities.hpp"
-#include "vanishing_point_initialization.hpp"
+#include "projection_functions/camera_model.hpp"
 
 namespace reprojection::calibration {
 
@@ -20,9 +17,11 @@ IntrinsicsInitializer SelectInitializationStrategy(CameraModel const camera_mode
     } else if (camera_model == CameraModel::Ucm) {
         initializer = projection_functions::Ucm::Initialize;
     } else {
-        throw std::runtime_error(  // LCOV_EXCL_LINE
-            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'initializer' logic not implemented for: " +  // LCOV_EXCL_LINE
-            ToString(camera_model));  // LCOV_EXCL_LINE
+        // LCOV_EXCL_START
+        throw std::runtime_error(
+            "LIBRARY IMPLEMENTATION ERROR - InitializeIntrinsics() 'initializer' logic not implemented for: " +
+            ToString(camera_model));
+        // LCOV_EXCL_STOP
     }
 
     return initializer;

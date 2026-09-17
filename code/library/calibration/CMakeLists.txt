@@ -5,9 +5,7 @@ set(SRC_FILES
         src/camera_pose_init.cpp
         src/init_methods.cpp
         src/intrinsic_initialization.cpp
-        src/parabola_line_initialization.cpp
         src/utilities.cpp
-        src/vanishing_point_initialization.cpp
         src/visual_inertial_init.cpp
 )
 set(PRIVATE_LINK_LIBRARIES
@@ -31,9 +29,7 @@ set(TEST_LINK_LIBRARIES
 )
 set(TESTS
         src/intrinsic_initialization.test.cpp
-        src/parabola_line_initialization.test.cpp
         src/utilities.test.cpp
-        src/vanishing_point_initialization.test.cpp
         src/visual_inertial_init.test.cpp
         test/calibration_utils.test.cpp
         test/init_methods.test.cpp
