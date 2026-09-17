@@ -33,10 +33,8 @@ Hash BundleAdjustment::CacheKey() const { return hashing::HashArgs(camera_info_,
 void BundleAdjustment::Execute(StepId step_id, SqlitePtr const db) const {
     using BundleAdjustment = optimization::BundleAdjustment;
 
-    auto const aligned_camera_poses{calibration::AlignRotations(camera_poses_)};
-
-    BundleAdjustment::Problem const problem{BundleAdjustment::SingleCamProblem(camera_info_, {intrinsic_}, targets_,
-                                                                               aligned_camera_poses, true, camera_id_)};
+    BundleAdjustment::Problem const problem{
+        BundleAdjustment::SingleCamProblem(camera_info_, {intrinsic_}, targets_, camera_poses_, true, camera_id_)};
     auto const [result, ceres_state]{BundleAdjustment::Solve(problem, num_threads_)};
     auto const& [rig, cameras]{result};
 

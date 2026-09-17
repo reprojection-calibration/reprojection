@@ -18,6 +18,7 @@ std::pair<BundleAdjustment::Result, CeresState> BundleAdjustment::Solve(Problem 
     Result result{problem};
 
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR, num_threads};
+    ceres_state.solver_options.max_num_iterations = 100;
     ceres::Problem ceres_problem{ceres_state.problem_options};
 
     for (auto const& [camera_id, _, frame_timestamp_ns, bundle] : problem.observations) {

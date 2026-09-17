@@ -13,7 +13,7 @@ namespace reprojection::feature_extraction {
 
 class CheckerboardExtractor : public TargetExtractor {
    public:
-    explicit CheckerboardExtractor(cv::Size const& pattern_size, double const unit_dimension);
+    explicit CheckerboardExtractor(cv::Size const& pattern_size, double unit_dimension);
 
     // TODO(Jack): This method is private in the base class but made public in all the derived classes. This is nice
     // because we can then easily test it, but if this is really consistent and makes sense... idk.
@@ -22,7 +22,7 @@ class CheckerboardExtractor : public TargetExtractor {
 
 class CircleGridExtractor : public TargetExtractor {
    public:
-    CircleGridExtractor(cv::Size const& pattern_size, double const unit_dimension, bool const asymmetric);
+    CircleGridExtractor(cv::Size const& pattern_size, double unit_dimension, bool asymmetric);
 
     std::optional<ExtractedTarget> ExtractImplementation(cv::Mat const& image) const override;
 
@@ -32,7 +32,7 @@ class CircleGridExtractor : public TargetExtractor {
 
 class Aprilgrid3Extractor : public TargetExtractor {
    public:
-    explicit Aprilgrid3Extractor(cv::Size const& pattern_size, double const unit_dimension);
+    explicit Aprilgrid3Extractor(cv::Size const& pattern_size, double unit_dimension);
 
     std::optional<ExtractedTarget> ExtractImplementation(cv::Mat const& image) const override;
 
@@ -42,11 +42,11 @@ class Aprilgrid3Extractor : public TargetExtractor {
     // TODO(Jack): We need a better name that conotates its more complicated function, also calculating the points
     static ArrayXi VisibleGeometry(cv::Size const& pattern_size, std::vector<AprilTagDetection> const& detections);
 
-    static MatrixX3d CornerPositions(ArrayX2i const& indices, double const unit_dimension);
+    static MatrixX3d CornerPositions(ArrayX2i const& indices, double unit_dimension);
 
    private:
     // TODO(Jack): Consider making these two extraction functions public and testing them!
-    static Matrix42d EstimateExtractionCorners(Matrix3d const& H, int const sqrt_num_bits);
+    static Matrix42d EstimateExtractionCorners(Matrix3d const& H, int sqrt_num_bits);
 
     static Matrix42d RefineCorners(cv::Mat const& image, Matrix42d const& extraction_corners);
 
