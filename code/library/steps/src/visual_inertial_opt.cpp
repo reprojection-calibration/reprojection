@@ -20,7 +20,7 @@ using VisualInertial = optimization::bundle_adjustment::VisualInertial;
 
 VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data_id, AssetId const cam0_id,
                                      std::vector<CamStageIds> const& cams, StepId const spline_id,
-                                     StepId const vi_extrinsic_init_id, StepId const stereo_extrinsic_init_id,
+                                     StepId const vi_extrinsic_init_id, StepId const stereo_rig_opt_id,
                                      int const num_threads, SqlitePtr const db)
     : imu_id_{imu_id},
       imu_data_id_{imu_data_id},
@@ -43,8 +43,17 @@ VisualInertialOpt::VisualInertialOpt(AssetId const imu_id, StepId const imu_data
         auto const intrinsic{
             ValueOrExit(database::IntrinsicSelect(db.get(), cam_i.bundle_adjustment_id, cam_i.asset_id), log)};
         auto const targets{database::TargetsSelect(db.get(), cam_i.targets_id, cam_i.asset_id)};
-        auto const extrinsic{
-            ValueOrExit(database::ExtrinsicSelect(db.get(), stereo_extrinsic_init_id, cam_i.asset_id, cam0_id_), log)};
+
+        // WARN(Jack): This is a super hack! What this does is protect us against the monocular camera case where the
+        // 'stereo_rig_opt_id' is not actually initialized. We need a better programmatic way to deal with this. This
+        // hack here does not scale or cover the case one day when we actually support rig/cam0 non-identity extrinsics.
+        Extrinsic extrinsic;
+        if (cam_i.asset_id == cam0_id_) {
+            extrinsic = Extrinsic(cam_i.asset_id, cam0_id_, Array6d::Zero());
+        } else {
+            extrinsic =
+                ValueOrExit(database::ExtrinsicSelect(db.get(), stereo_rig_opt_id, cam_i.asset_id, cam0_id_), log);
+        }
 
         ba_input_.emplace_back(optimization::CameraProblemInput{cam_i.asset_id, camera_info, intrinsic, targets,
                                                                 extrinsic.se3_a_b, false, false});
