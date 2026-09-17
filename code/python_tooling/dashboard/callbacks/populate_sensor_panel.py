@@ -26,7 +26,8 @@ def render_sensor_panel(asset_id, metadata, stage_id="single_cam"):
         )
     pose_title = (
         "Rig motion (reference camera)"
-        if stage_id == "multi_cam" and camera == assets_of_type(metadata, "camera")[0]
+        if stage_id in ("multi_cam", "cam_imu")
+        and camera == assets_of_type(metadata, "camera")[0]
         else "Camera motion"
     )
     panels = [camera_layout(asset_id, camera_label(camera), pose_title)]

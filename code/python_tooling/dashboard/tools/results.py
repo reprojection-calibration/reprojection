@@ -37,7 +37,7 @@ def build_result_summary(asset_id, step_id, metadata, workflow_data, stage_id):
                 className="result-metrics",
             )
         )
-        if stage_id == "multi_cam" and not counts.get("camera_poses"):
+        if stage_id in ("multi_cam", "cam_imu") and not counts.get("camera_poses"):
             content.append(
                 html.P(
                     "This camera has reprojection results. Select the reference camera to view the rig poses.",

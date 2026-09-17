@@ -34,7 +34,7 @@ STAGES = (
     Stage(
         "cam_imu",
         "Visual-inertial",
-        "Combine the reference camera's individual calibration with IMU measurements: fit a motion spline, initialize alignment, then optimize.",
+        "Combine the calibrated cameras with IMU measurements: fit a motion spline, initialize alignment, then optimize using all cameras.",
         (
             "imu_data_loading",
             "spline_init",
@@ -99,9 +99,7 @@ def stage_available(metadata, stage_id):
 def stage_cameras(metadata, stage_id):
     if not stage_available(metadata, stage_id):
         return []
-    cameras = assets_of_type(metadata, "camera")
-    # Calibrate() uses cam_stages.front() for visual-inertial calibration.
-    return cameras[:1] if stage_id == "cam_imu" else cameras
+    return assets_of_type(metadata, "camera")
 
 
 def result_step_ids(metadata, asset_id, stage_id=None):
@@ -206,6 +204,6 @@ def build_stage_overview(stage_id, metadata):
             imu_names = ", ".join(
                 asset["name"] for asset in assets_of_type(metadata, "imu")
             )
-            note = f"Reference: {reference}. IMU: {imu_names}. This stage uses the individual camera calibration, not the stereo rig result."
+            note += f" IMU: {imu_names}."
         content.append(html.P(note, className="stage-note"))
     return content
