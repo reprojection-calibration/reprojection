@@ -57,7 +57,9 @@ def serialize_workflow(workflow, tables):
         )
         if timestamp_column in table:
             table = table.sort_values([timestamp_column, "step_id", "asset_id"])
-            table[timestamp_column] = table[timestamp_column].map(str)
+        for column in table.columns:
+            if column.endswith("timestamp_ns"):
+                table[column] = table[column].map(str)
         records[name] = table.to_dict("records")
     return {
         "id": workflow.id,

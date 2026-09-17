@@ -4,26 +4,35 @@ from dashboard.tools.selection import table_rows
 from dashboard.tools.workflow import STEP_LABELS, stage_step_ids
 
 
-def build_result_summary(asset_id, step_id, metadata, workflow_data, stage_id):
-    if asset_id is None or not metadata:
+def build_result_summary(
+    asset_id, step_id, metadata, workflow_data, stage_id, all_cameras=False
+):
+    if (asset_id is None and not all_cameras) or not metadata:
         return []
-    counts = {
-        row["table"]: row["count"]
-        for row in metadata["counts"]
-        if row["asset_id"] == asset_id and row["step_id"] == step_id
-    }
+    asset_ids = (
+        {asset["id"] for asset in metadata["assets"] if asset["type"] == "camera"}
+        if all_cameras
+        else {asset_id}
+    )
+    counts = {}
+    for row in metadata["counts"]:
+        if row["asset_id"] in asset_ids and row["step_id"] == step_id:
+            counts[row["table"]] = counts.get(row["table"], 0) + row["count"]
     content = []
     if step_id is None:
         content.append(
             html.P(
-                "No pose or reprojection results recorded for this camera in this stage yet. You can inspect any available target detections below.",
+                "No pose or reprojection results recorded for this selection in this stage yet. You can inspect any available target detections below.",
                 className="empty-state",
             )
         )
     else:
         metrics = [
             ("Pose samples", counts.get("camera_poses", 0)),
-            ("Frames with reprojection errors", counts.get("reprojection_errors", 0)),
+            (
+                "Camera samples with reprojection errors",
+                counts.get("reprojection_errors", 0),
+            ),
         ]
         content.append(
             html.Div(
@@ -37,7 +46,11 @@ def build_result_summary(asset_id, step_id, metadata, workflow_data, stage_id):
                 className="result-metrics",
             )
         )
-        if stage_id in ("multi_cam", "cam_imu") and not counts.get("camera_poses"):
+        if (
+            not all_cameras
+            and stage_id in ("multi_cam", "cam_imu")
+            and not counts.get("camera_poses")
+        ):
             content.append(
                 html.P(
                     "This camera has reprojection results. Select the reference camera to view the rig poses.",

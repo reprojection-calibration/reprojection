@@ -60,7 +60,7 @@ global.dash_clientside = {Patch: class {
 }};
 """
         script += (
-            "const render = ("
+            "const renderAll = ("
             + clientside_function(dashboard.callbacks.extracted_targets)
             + ");\n"
         )
@@ -72,6 +72,8 @@ global.dash_clientside = {Patch: class {
         script += "const targets = " + json.dumps([target]) + ";\n"
         script += "const data = " + json.dumps(payload) + ";\n"
         script += """
+const render = (index, targets, step, data, max, id) =>
+    renderAll([index], targets, step, data, [max], 'single_cam', id);
 const patch = render(0, targets, 30, data, 10, {asset_id: 1});
 assert.deepEqual(patch['data.0.marker'].color, [5]);
 assert.deepEqual(patch['layout.xaxis2.range'], [0, 640]);
@@ -80,6 +82,25 @@ assert.equal(timestamp(1, targets), '');
 assert.deepEqual(render(1, targets, 30, data, 10, {asset_id: 1})['data.0.x'], []);
 assert.equal(render(0, targets, 99, data, 10, {asset_id: 1})['data.0.marker'].color, 'darkgray');
 assert.deepEqual(render(0, targets, 30, data, 10, {asset_id: 2})['data.0.x'], []);
+
+const frames = [{timestamp_ns: '1700000000000000000', time_basis: 'frame', cameras: {'1': targets[0]}}];
+for (const stage of ['multi_cam', 'cam_imu']) {
+    const multi = renderAll([0], frames, 30, data, [10], stage, {asset_id: 1});
+    assert.deepEqual(multi['data.0.x'], [50]);
+    assert.deepEqual(multi['data.0.marker'].color, [5]);
+    assert.equal(multi['data.1.x'], undefined);
+    assert.deepEqual(multi['layout.xaxis.range'], [0, 640]);
+    assert.match(multi['layout.title.text'], /Δt.*\\+0.000001 ms/);
+    const missing = renderAll([0], frames, 30, data, [10], stage, {asset_id: 2});
+    assert.deepEqual(missing['data.0.x'], []);
+    assert.match(missing['layout.title.text'], /No matching sample/);
+    assert.deepEqual(missing['data.0.customdata'], []);
+}
+frames[0].timestamp_ns = '1700000000005000001';
+frames[0].time_basis = 'playback';
+const earlier = renderAll([0], frames, 30, data, [10], 'cam_imu', {asset_id: 1});
+assert.match(earlier['layout.title.text'], /Δt \\(playback\\) = -5.000000 ms/);
+assert.equal(timestamp(0, frames), '1700000000005000001');
 """
         subprocess.run(
             [shutil.which("node"), "-e", script],

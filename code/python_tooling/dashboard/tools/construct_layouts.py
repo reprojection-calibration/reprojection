@@ -58,7 +58,7 @@ POSE_VISUALIZATION = FigureConfig(
 )
 
 
-def camera_layout(asset_id, label="Camera", pose_title="Camera motion"):
+def camera_layout(asset_id, label="Camera", pose_title="Camera motion", cameras=None):
     return html.Section(
         [
             html.Div(
@@ -119,11 +119,7 @@ def camera_layout(asset_id, label="Camera", pose_title="Camera motion"):
                 updatemode="drag",
                 tooltip={"placement": "bottom", "always_visible": False},
             ),
-            dcc.Graph(
-                id={"type": "extracted_targets", "asset_id": asset_id},
-                figure=build_figure_layout(TARGET_VISUALIZATION),
-                config={"displaylogo": False},
-            ),
+            target_panels(cameras) if cameras else target_graph(asset_id),
             dcc.Graph(
                 id={
                     "type": "timeseries",
@@ -137,6 +133,46 @@ def camera_layout(asset_id, label="Camera", pose_title="Camera motion"):
             ),
         ],
         className="plot-panel",
+    )
+
+
+def target_graph(asset_id, features_only=False):
+    config = TARGET_VISUALIZATION
+    if features_only:
+        config = replace(
+            config, title="Extracted features", subplots=(config.subplots[1],)
+        )
+    return dcc.Graph(
+        id={"type": "extracted_targets", "asset_id": asset_id},
+        figure=build_figure_layout(config),
+        config={"displaylogo": False},
+    )
+
+
+def target_panels(cameras):
+    from dashboard.tools.workflow import camera_label
+
+    return html.Div(
+        [
+            html.Div(
+                [
+                    html.H3(camera_label(camera)),
+                    target_graph(camera["id"], features_only=True),
+                ],
+                className="camera-features",
+            )
+            for camera in cameras
+        ],
+        className="camera-grid",
+    )
+
+
+def rig_layout(cameras):
+    return camera_layout(
+        cameras[0]["id"],
+        "All cameras",
+        "Rig motion (reference camera)",
+        cameras=cameras,
     )
 
 
