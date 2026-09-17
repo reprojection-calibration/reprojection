@@ -16,9 +16,10 @@ auto const log{logging::Get("steps")};
 
 }
 
-IntrinsicInit::IntrinsicInit(AssetId const camera_id, int const num_threads, StepId const camera_info_id,
-                             StepId const targets_id, SqlitePtr const db)
+IntrinsicInit::IntrinsicInit(AssetId const camera_id, std::optional<double> const& focal_length, int const num_threads,
+                             StepId const camera_info_id, StepId const targets_id, SqlitePtr const db)
     : camera_id_{camera_id},
+      focal_length_{focal_length},
       num_threads_{num_threads},
       camera_info_{ValueOrExit(database::CameraInfoSelect(db.get(), camera_info_id, camera_id), log)},
       targets_{database::TargetsSelect(db.get(), targets_id, camera_id)} {}
@@ -29,8 +30,9 @@ Hash IntrinsicInit::CacheKey() const {
 }
 
 void IntrinsicInit::Execute(StepId const step_id, SqlitePtr const db) const {
-    auto const intrinsic{calibration::InitializeIntrinsics(camera_info_.camera_model, camera_info_.bounds.v_max,
-                                                           camera_info_.bounds.u_max, targets_, num_threads_)};
+    auto const intrinsic{calibration::InitializeIntrinsics(camera_info_.camera_model, focal_length_,
+                                                           camera_info_.bounds.v_max, camera_info_.bounds.u_max,
+                                                           targets_, num_threads_)};
     if (not intrinsic.has_value()) {
         // LCOV_EXCL_START
         log->error("{{{}, 'msg': 'Failed to initialize intrinsics.'}}", StepLogInfo{Type(), step_id, camera_id_});

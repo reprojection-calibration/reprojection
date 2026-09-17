@@ -25,23 +25,27 @@ auto const log{logging::Get("calibration")};
 
 }
 
-std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, double const height, double const width,
-                                            TargetSamples const& targets, int const num_threads) {
-    int num_gammas{100};
+std::optional<ArrayXd> InitializeIntrinsics(CameraModel const camera_model, std::optional<double> const& focal_length,
+                                            double const height, double const width, TargetSamples const& targets,
+                                            int const num_threads) {
+    // Generate all focal length initialization values. There is an automatic policy of (0 -> max(h,w)) or a
+    // configurable focal_length plus minus 0.5xfocal_length.
+    double const max_dim{std::max(height, width)};
+    double const min_focal_length{focal_length ? *focal_length * 0.5 : 0.0};
+    double const max_focal_length{focal_length ? *focal_length * 1.5 : max_dim};
+
+    constexpr int num_samples{200};
     std::vector<double> focal_lengths;
-    for (double i{0}; i < num_gammas; i++) {
-        double const gamma_i{(i / num_gammas) * std::max(height, width)};
-        focal_lengths.push_back(gamma_i);
+    for (int i{0}; i < num_samples; ++i) {
+        double const t{static_cast<double>(i) / (num_samples - 1)};
+        focal_lengths.push_back(min_focal_length + (t * (max_focal_length - min_focal_length)));
     }
 
     // Generate a subset of targets which we will use to test our intrinsic hypothesis with.
-    //
-    // TODO(Jack): Is 20 enough, too many, or too little?
-    // TODO(Jack): What if the set of selected targets has bad properties like too many outliers or other degnerate
-    // cases for a camera calibration bundle adjustment. How would the user be able to get around this point? We should
-    // offer the user the option to manually initialize the intrinsics.
     auto const target_subset{SampleMap(targets, 20)};
 
+    // Evaluate small bundle adjustment problems for each provided focal length and pick the one that has the lowest
+    // cost.
     auto const initializer{SelectInitializationStrategy(camera_model)};
     std::map<double, Intrinsic> cost_intrinsic_map;
     for (auto const f_i : focal_lengths) {

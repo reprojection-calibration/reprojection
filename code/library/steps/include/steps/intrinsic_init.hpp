@@ -7,7 +7,8 @@
 namespace reprojection::steps {
 
 struct IntrinsicInit {
-    IntrinsicInit(AssetId camera_id, int num_threads, StepId camera_info_id, StepId targets_id, SqlitePtr db);
+    IntrinsicInit(AssetId camera_id, std::optional<double> const& focal_length, int num_threads, StepId camera_info_id,
+                  StepId targets_id, SqlitePtr db);
 
     static StepType Type() { return StepType::IntrinsicInit; }
 
@@ -19,6 +20,7 @@ struct IntrinsicInit {
 
    private:
     AssetId camera_id_;
+    std::optional<double> focal_length_;
     int num_threads_;
     CameraInfo camera_info_;
     TargetSamples targets_;

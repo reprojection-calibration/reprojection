@@ -41,10 +41,19 @@ Config::Application Config::Application::Parse(toml::table const& table) {
 }
 
 Config::Camera Config::Camera::Parse(toml::table const& table, int const index) {
-    RejectUnexpectedKeys(table, {"camera_model", "index", "sensor_name"}, "camera");
+    RejectUnexpectedKeys(table, {"camera_model", "index", "sensor_name", "focal_length"}, "camera");
 
-    return Camera{ToCameraModel(Require<std::string>(table, "camera_model")), index,
-                  Require<std::string>(table, "sensor_name")};
+    Camera config{};
+
+    // Required keys
+    config.camera_model = ToCameraModel(Require<std::string>(table, "camera_model"));
+    config.index = index;
+    config.sensor_name = Require<std::string>(table, "sensor_name");
+
+    // Optional keys
+    OverrideIfPresent(table, "focal_length", *config.focal_length);
+
+    return config;
 }
 
 // The table is not required (we do not always have IMU data), but we have no sensible defaults.
