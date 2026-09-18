@@ -32,7 +32,7 @@ class ReprojectionErrorSpline_T {
 
         // Evaluate the se3 pose from the spline and then return the normal reprojection error using the evaluated
         // spline pose as the world to rig transform.
-        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P, time_offset + u_i_, delta_t_ns_)};
+        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P,  u_i_ - time_offset, delta_t_ns_)};
         Array6<T> const se3_rig_w{geometry::InverseTransform(se3_w_rig)};
 
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
