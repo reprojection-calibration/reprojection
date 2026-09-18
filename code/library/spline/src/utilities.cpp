@@ -9,7 +9,7 @@ namespace reprojection::spline {
 VectorKd CalculateU(double const u_i, int const derivative_order) {
     assert(0 <= u_i and u_i < 1);
 
-    static MatrixKd const polynomial_coefficients{PolynomialCoefficients(K)};  // Static means it only evaluates once :)
+    static MatrixKd const polynomial_coefficients{PolynomialCoefficients<double>(K)};  // Static means it only evaluates once :)
 
     VectorKd const u{polynomial_coefficients.row(derivative_order).transpose().array() *
                      TimePolynomial(K, u_i, derivative_order).array()};
@@ -37,25 +37,7 @@ VectorXd TimePolynomial(int const k, double const u, int const derivative) {
     return result;
 }  // LCOV_EXCL_LINE
 
-// TODO(Jack): Should this really be an integer type valued function?
-// For polynomial k=4
-//      1 1 1 1     - zero derivative coefficients
-//      0 1 2 3     - first derivative coefficients
-//      0 0 2 6     - ...
-//      0 0 0 6
-MatrixXd PolynomialCoefficients(int const k) {
-    assert(k >= 1);
 
-    MatrixXd result{MatrixXd::Zero(k, k)};
-    result.row(0).setOnes();
-    for (int i{1}; i < k; ++i) {
-        for (int j{i}; j < k; ++j) {
-            result(i, j) = (j - (i - 1)) * result(i - 1, j);
-        }
-    }
-
-    return result;
-}  // LCOV_EXCL_LINE
 
 MatrixXd BlendingMatrix(int const k) {
     MatrixXd result{MatrixXd::Zero(k, k)};

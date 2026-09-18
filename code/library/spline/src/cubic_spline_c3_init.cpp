@@ -148,7 +148,7 @@ MatrixXd DerivativeOperator(int const order) {
     MatrixXd derivative{MatrixXd::Zero(order, order)};
     // TODO(Jack): Why is this hardcoded to DerivativeOrder::First here?
     derivative.diagonal(1) =
-        PolynomialCoefficients(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
+        PolynomialCoefficients<double>(order).row(static_cast<int>(DerivativeOrder::First)).rightCols(order - 1);
 
     return derivative;
 }  // LCOV_EXCL_LINE

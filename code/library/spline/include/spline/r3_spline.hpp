@@ -48,7 +48,7 @@ struct R3Spline {
     static inline MatrixKd const M_{BlendingMatrix(K)};
 
    private:
-    static inline MatrixKd const polynomial_coefficients_{PolynomialCoefficients(K)};
+    static inline MatrixKd const polynomial_coefficients_{PolynomialCoefficients<double>(K)};
 };
 
 }  // namespace reprojection::spline

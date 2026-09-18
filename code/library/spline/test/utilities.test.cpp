@@ -36,7 +36,7 @@ TEST(SplineUtilities, TestCalculateU) {
 }
 
 TEST(SplineUtilities, TestPolynomialCoefficients) {
-    Matrix4d const polynomial_coefficients{spline::PolynomialCoefficients(4)};
+    Matrix4d const polynomial_coefficients{spline::PolynomialCoefficients<double>(4)};
 
     Matrix4d const gt_polynomial_coefficients{{1, 1, 1, 1}, {0, 1, 2, 3}, {0, 0, 2, 6}, {0, 0, 0, 6}};
     EXPECT_TRUE(polynomial_coefficients.isApprox(gt_polynomial_coefficients));

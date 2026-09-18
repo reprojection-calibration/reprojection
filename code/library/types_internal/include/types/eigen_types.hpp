@@ -46,6 +46,9 @@ using MatrixX2d = Eigen::MatrixX2d;
 using MatrixX3d = Eigen::MatrixX3d;
 using MatrixX4d = Eigen::MatrixX4d;
 using MatrixXd = Eigen::MatrixXd;
+template <typename T>
+using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+using MatrixXd = MatrixX<double>;
 using MatrixXi = Eigen::MatrixXi;
 
 using Vector2d = Eigen::Vector2d;
