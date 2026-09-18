@@ -47,18 +47,29 @@ VectorX<T> TimePolynomial(int const k, double const u, int const derivative) {
 // construction depends on which derivative of u we are evaluating the spline at.
 // TODO(Jack): I do not like that this method requires knowledge of the spline order k, but no other method does here in
 // the utilities file. Are we missing the point somewhere?
-VectorKd CalculateU(double const u_i, int const derivative_order);
+// TODO(Jack): We also can calculate std::pow(delta_t_ns, derivative_order) in the constructor ahead of time if we
+// find out it causes some problems.
+template <typename T>
+VectorK<T> CalculateU(double const u_i, DerivativeOrder const derivative_order = DerivativeOrder::Null) {
+    assert(0 <= u_i and u_i < 1);
 
-VectorKd CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
+    // Static means it only evaluates once :) K is a project constant which is why its ok we do this.
+    static MatrixKd const polynomial_coefficients{PolynomialCoefficients<T>(K)};
 
-MatrixXd BlendingMatrix(int const k);
+    const int j{static_cast<int>(derivative_order)};
+    VectorK<T> const u{polynomial_coefficients.row(j).transpose().array() * TimePolynomial<T>(K, u_i, j).array()};
 
-MatrixXd CumulativeBlendingMatrix(int const k);
+    return u;
+}
+
+MatrixXd BlendingMatrix(int k);
+
+MatrixXd CumulativeBlendingMatrix(int k);
 
 // Note the symbol variables n and k come directly from wikipedia and are not chosen to reflect any relation to any
 // other variable symbol in the spline library.
-int BinomialCoefficient(int const n, int const k);
+int BinomialCoefficient(int n, int k);
 
-int Factorial(int const n);
+int Factorial(int n);
 
 }  // namespace reprojection::spline

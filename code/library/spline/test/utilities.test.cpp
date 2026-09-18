@@ -14,9 +14,9 @@ using namespace reprojection;
 TEST(SplineUtilities, TestCalculateUAtZero) {
     double const u_i{0};
 
-    spline::VectorKd const u{spline::CalculateU(u_i)};
-    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
-    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
+    spline::VectorKd const u{spline::CalculateU<double>(u_i)};
+    spline::VectorKd const du{spline::CalculateU<double>(u_i, spline::DerivativeOrder::First)};
+    spline::VectorKd const dudu{spline::CalculateU<double>(u_i, spline::DerivativeOrder::Second)};
 
     EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0, 0, 0}));
     EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 0, 0}));
@@ -26,9 +26,9 @@ TEST(SplineUtilities, TestCalculateUAtZero) {
 TEST(SplineUtilities, TestCalculateU) {
     double const u_i{0.5};
 
-    spline::VectorKd const u{spline::CalculateU(u_i)};
-    spline::VectorKd const du{spline::CalculateU(u_i, spline::DerivativeOrder::First)};
-    spline::VectorKd const dudu{spline::CalculateU(u_i, spline::DerivativeOrder::Second)};
+    spline::VectorKd const u{spline::CalculateU<double>(u_i)};
+    spline::VectorKd const du{spline::CalculateU<double>(u_i, spline::DerivativeOrder::First)};
+    spline::VectorKd const dudu{spline::CalculateU<double>(u_i, spline::DerivativeOrder::Second)};
 
     EXPECT_TRUE(u.isApprox(spline::VectorKd{1, 0.5, 0.25, 0.125}));
     EXPECT_TRUE(du.isApprox(spline::VectorKd{0, 1, 1, 0.75}));

@@ -59,7 +59,7 @@ using Vector3d = Vector3<double>;
 using Vector4d = Eigen::Vector4d;
 using Vector6d = Eigen::Vector<double, 6>;
 template <typename T>
-using VectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+using VectorX = Eigen::Vector<T, Eigen::Dynamic>;
 using VectorXd = VectorX<double>;
 
 // Miscellaneous types

@@ -26,7 +26,9 @@ template <typename T>
 using MatrixNK = Eigen::Matrix<T, N, K>;
 using MatrixNKd = MatrixNK<double>;
 using MatrixNXd = Eigen::Matrix<double, N, Eigen::Dynamic>;
-using VectorKd = Eigen::Vector<double, K>;
+template <typename T>
+using VectorK = Eigen::Vector<T, K>;
+using VectorKd = VectorK<double>;  // DO WE USE THIS?
 
 // For both the r3 and so3 spline we can evaluate either the position, velocity, or acceleration.
 enum class DerivativeOrder { Null = 0, First = 1, Second = 2 };
