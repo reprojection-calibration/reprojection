@@ -15,7 +15,6 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& o
     ceres::Problem problem{ceres_state.problem_options};
 
     Array6d se3_imu_rig{0, 0, 0, 0, 0, 0};
-    double offset{0};  // NAMING!
     for (auto const timestamp_ns : omega_imu | std::views::keys) {
         auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
         if (not normalized_position) {
@@ -31,15 +30,13 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& o
                                  spline.ControlPoint(i),      //
                                  spline.ControlPoint(i + 1),  //
                                  spline.ControlPoint(i + 2),  //
-                                 spline.ControlPoint(i + 3),  //
-                                 &offset);
+                                 spline.ControlPoint(i + 3));
 
         // NOTE(Jack): We only want to initialize the extrinsic orientation between the imu and camera therefore we set
         // the control points constant.
         for (int j{0}; j < 4; ++j) {
             problem.SetParameterBlockConstant(spline.ControlPoint(i + j));
         }
-        problem.SetParameterBlockConstant(&offset);
     }
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);
