@@ -18,7 +18,7 @@ TEST(OptimizationCostFunctions, TestReprojectionErrorSplineCreate) {
     double const u_i{0};
     uint64_t const delta_t_ns{1};
 
-    int const num_parameter_blocks{6};  // intrinsic, cam-rig extrinsic, and four control points
+    int const num_parameter_blocks{7};  // intrinsic, cam-rig extrinsic, four control points, and time offset.
 
     ceres::CostFunction* cost_function{
         Create(CameraModel::DoubleSphere, testing_utilities::image_bounds, pixel, point, u_i, delta_t_ns)};

@@ -26,6 +26,7 @@ MatrixX<T> PolynomialCoefficients(int const k) {
     return result;
 }
 
+// TODO DO WE EVEN NEED TO TEMPLATE THIS!!! THEY ARE ONLY USED AS A CONSTANTS.
 // NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
 // vector u in the same namespace.
 template <typename T>
@@ -54,7 +55,7 @@ VectorK<T> CalculateU(T const u_i, DerivativeOrder const derivative_order = Deri
     assert(0 <= u_i and u_i < 1);
 
     // Static means it only evaluates once :) K is a project constant which is why its ok we do this.
-    static MatrixKd const polynomial_coefficients{PolynomialCoefficients<T>(K)};
+    static MatrixKd const polynomial_coefficients{PolynomialCoefficients<double>(K)};
 
     const int j{static_cast<int>(derivative_order)};
     VectorK<T> const u{polynomial_coefficients.row(j).transpose().array() * TimePolynomial<T>(K, u_i, j).array()};
