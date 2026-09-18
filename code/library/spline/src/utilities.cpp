@@ -9,10 +9,11 @@ namespace reprojection::spline {
 VectorKd CalculateU(double const u_i, int const derivative_order) {
     assert(0 <= u_i and u_i < 1);
 
-    static MatrixKd const polynomial_coefficients{PolynomialCoefficients<double>(K)};  // Static means it only evaluates once :)
+    static MatrixKd const polynomial_coefficients{
+        PolynomialCoefficients<double>(K)};  // Static means it only evaluates once :)
 
     VectorKd const u{polynomial_coefficients.row(derivative_order).transpose().array() *
-                     TimePolynomial(K, u_i, derivative_order).array()};
+                     TimePolynomial<double>(K, u_i, derivative_order).array()};
 
     return u;
 }
@@ -22,22 +23,6 @@ VectorKd CalculateU(double const u_i, DerivativeOrder const derivative) {
 
     return CalculateU(u_i, derivative_order);
 }
-
-VectorXd TimePolynomial(int const k, double const u, int const derivative) {
-    assert(k >= 1);
-    assert(0 <= u and u < 1);
-    assert(0 <= derivative and derivative <= k - 1);
-
-    VectorXd result{VectorXd::Zero(k)};
-    result(derivative) = 1.0;
-    for (int i{1 + derivative}; i < k; ++i) {
-        result(i) = result(i - 1) * u;
-    }
-
-    return result;
-}  // LCOV_EXCL_LINE
-
-
 
 MatrixXd BlendingMatrix(int const k) {
     MatrixXd result{MatrixXd::Zero(k, k)};

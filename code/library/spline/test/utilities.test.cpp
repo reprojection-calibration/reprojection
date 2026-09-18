@@ -43,15 +43,15 @@ TEST(SplineUtilities, TestPolynomialCoefficients) {
 }
 
 TEST(SplineUtilities, TestTimePolynomial) {
-    VectorXd const result0{spline::TimePolynomial(4, 0.1, 0)};
+    VectorXd const result0{spline::TimePolynomial<double>(4, 0.1, 0)};
     EXPECT_EQ(result0.rows(), 4);
     EXPECT_TRUE(result0.isApprox(Vector4d{1, 1.0 / 10, 1.0 / 100, 1.0 / 1000}));
 
-    VectorXd const result1{spline::TimePolynomial(4, 0.1, 1)};
+    VectorXd const result1{spline::TimePolynomial<double>(4, 0.1, 1)};
     EXPECT_EQ(result1.rows(), 4);
     EXPECT_TRUE(result1.isApprox(Vector4d{0, 1, 1.0 / 10, 1.0 / 100}));
 
-    VectorXd const result2{spline::TimePolynomial(4, 0.1, 2)};
+    VectorXd const result2{spline::TimePolynomial<double>(4, 0.1, 2)};
     EXPECT_EQ(result2.rows(), 4);
     EXPECT_TRUE(result2.isApprox(Vector4d{0, 0, 1, 1.0 / 10}));
 }

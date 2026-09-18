@@ -24,7 +24,24 @@ MatrixX<T> PolynomialCoefficients(int const k) {
     }
 
     return result;
-}  // LCOV_EXCL_LINE
+}
+
+// NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
+// vector u in the same namespace.
+template <typename T>
+VectorX<T> TimePolynomial(int const k, double const u, int const derivative) {
+    assert(k >= 1);
+    assert(0 <= u and u < 1);
+    assert(0 <= derivative and derivative <= k - 1);
+
+    VectorX<T> result{VectorX<T>::Zero(k)};
+    result(derivative) = 1.0;
+    for (int i{1 + derivative}; i < k; ++i) {
+        result(i) = result(i - 1) * u;
+    }
+
+    return result;
+}
 
 // We are constructing the column vectors u that we multiply by C as found at the top of page five in [2] - this
 // construction depends on which derivative of u we are evaluating the spline at.
@@ -33,10 +50,6 @@ MatrixX<T> PolynomialCoefficients(int const k) {
 VectorKd CalculateU(double const u_i, int const derivative_order);
 
 VectorKd CalculateU(double const u_i, DerivativeOrder const derivative = DerivativeOrder::Null);
-
-// NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
-// vector u in the same namespace.
-VectorXd TimePolynomial(int const k, double const u, int const derivative);
 
 MatrixXd BlendingMatrix(int const k);
 

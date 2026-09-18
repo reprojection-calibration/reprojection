@@ -58,7 +58,9 @@ using Vector3 = Eigen::Vector3<T>;
 using Vector3d = Vector3<double>;
 using Vector4d = Eigen::Vector4d;
 using Vector6d = Eigen::Vector<double, 6>;
-using VectorXd = Eigen::VectorXd;
+template <typename T>
+using VectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+using VectorXd = VectorX<double>;
 
 // Miscellaneous types
 using Isometry3d = Eigen::Isometry3d;
