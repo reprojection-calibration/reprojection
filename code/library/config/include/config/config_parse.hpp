@@ -58,6 +58,16 @@ struct Config {
         // removed by the time we parse its' contents.
         static Camera Parse(toml::table const& table, int index);
 
+        /*! \brief The camera's selected projection model type.
+         *
+         *  \par TOML Config
+         *  The configuration file parameter should be written in snake_case. See enum \ref reprojection::CameraModel
+         *  for the list of supported values and the function \ref reprojection::ToCameraModel for the
+         *  PascalCase <-> snake_case conversion logic.
+         *  \code{.toml}
+         *  camera_model = "double_sphere"
+         *  \endcode
+         */
         CameraModel camera_model;
         std::optional<double> focal_length{std::nullopt};
         int index;

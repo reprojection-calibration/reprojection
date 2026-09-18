@@ -3,6 +3,12 @@
 #include <stdexcept>
 #include <string>
 
+// TODO(Jack): Is doxygen really so crazy that I need to add this to the top of the file for this to be generated at
+// all?
+/**
+ * \file enums.hpp
+ */
+
 namespace reprojection {
 
 // NOTE(Jack): We turn off code coverage for all the conversions functions because it just does not bring us much here
@@ -26,15 +32,32 @@ inline std::string ToString(Entity const entity_id) {
     }
 }
 
+/*! \brief Supported camera projection models.
+ *
+ *  \par Single focal length
+ *  All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please see
+ *  this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from [Tangram
+ *  Vision](https://www.tangramvision.com/) for an explanation.
+ *
+ *  \par Ucm formulation
+ *  We follow the intrinsic parameter conventions from this paper "The Double Sphere Camera Model, Usenko Et al. 2018".
+ *  Note that for the "unified camera model" we use the Usenko Et al. proposed numerically stable formulation, and not
+ *  the original formulation from "Single view point omnidirectional camera calibration from planar grids, Mei Et al.
+ *  2007". The conversion from one to the other is found in Usenko Et al. section 2.2.
+ */
 enum class CameraModel {
-    DoubleSphere,  //
+    /// [f, cx, cy, xi, alpha]
+    DoubleSphere,
+    /// [x, cx, cy, alpha, beta] - "extended unified camera model"
     Eucm,
+    /// [f, cx, cy]
     Pinhole,
+    /// [f, cx, cy, k1, k2, p1, p2] - "pinhole with four parameter radial-tangential distortion"
     PinholeRadtan4,
+    /// [f cx, cy, alpha] - "unified camera model"
     Ucm,
 };
 
-// TODO(Jack): Is this the right place to put functions like this? What about testing?
 inline std::string ToString(CameraModel const camera_model) {
     if (camera_model == CameraModel::DoubleSphere) {
         return "double_sphere";
@@ -51,6 +74,10 @@ inline std::string ToString(CameraModel const camera_model) {
     }
 }
 
+// TODO ADD SHOWINLINESOURCE! UPGRADE DOXYGEN TO DO SO
+/*! \brief Convert a human readable string into a \ref reprojection::CameraModel enum.
+ *
+ */
 inline CameraModel ToCameraModel(std::string_view camera_model) {
     if (camera_model == "double_sphere") {
         return CameraModel::DoubleSphere;
