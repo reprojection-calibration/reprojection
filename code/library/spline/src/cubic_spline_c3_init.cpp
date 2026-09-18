@@ -116,7 +116,7 @@ CubicBSplineC3Init::ControlPointBlock CubicBSplineC3Init::BlockifyWeights(double
     // so3 spline is a cumulative spline and has a different basis matrix than the R3 spline. During testing of the
     // interpolation on the spline trajectory it seemed to work regardless, but maybe there is an error here anyway that
     // will come out in edge cases!
-    VectorKd const weights_i{R3Spline::B<DerivativeOrder::Null>(u_i)};
+    VectorKd const weights_i{R3Spline::B<double, DerivativeOrder::Null>(u_i)};
 
     ControlPointBlock sparse_weights{ControlPointBlock::Zero()};
     for (int i{0}; i < K; ++i) {

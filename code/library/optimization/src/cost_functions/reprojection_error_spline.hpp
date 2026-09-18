@@ -5,7 +5,6 @@
 #include "cost_functions/utils.hpp"
 #include "projection_functions/projection_class_concept.hpp"
 #include "spline/se3_spline.hpp"
-#include "spline/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/eigen_types.hpp"
 #include "types/enums.hpp"
@@ -22,15 +21,18 @@ template <typename T_Model>
     requires projection_functions::ProjectionClass<T_Model>
 class ReprojectionErrorSpline_T {
    public:
+    // TODO(Jack): What is this 'time offset'? Is it a real time or a normalized time?
+    // ERROR(Jack): What happens when the time offset brings u_i out of the valid range?
     template <typename T>
     bool operator()(T const* const intrinsics_ptr, T const* const se3_co_rig_ptr, T const* const cp_0_ptr,
                     T const* const cp_1_ptr, T const* const cp_2_ptr, T const* const cp_3_ptr,
-                    T* const residual_ptr) const {
+                    T const* const time_offset_ptr, T* const residual_ptr) const {
         auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
+        T const time_offset{*time_offset_ptr};
 
         // Evaluate the se3 pose from the spline and then return the normal reprojection error using the evaluated
         // spline pose as the world to rig transform.
-        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P, u_i_, delta_t_ns_)};
+        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P, time_offset + u_i_, delta_t_ns_)};
         Array6<T> const se3_rig_w{geometry::InverseTransform(se3_w_rig)};
 
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)
@@ -39,7 +41,7 @@ class ReprojectionErrorSpline_T {
 
     static ceres::CostFunction* Create(Vector2d const& pixel, Vector3d const& point_w, ImageBounds const& bounds,
                                        double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<ReprojectionErrorSpline_T, 2, T_Model::Size, 6, 6, 6, 6, 6>(
+        return new ceres::AutoDiffCostFunction<ReprojectionErrorSpline_T, 2, T_Model::Size, 6, 6, 6, 6, 6, 1>(
             new ReprojectionErrorSpline_T(pixel, point_w, bounds, u_i, delta_t_ns));
     }
 

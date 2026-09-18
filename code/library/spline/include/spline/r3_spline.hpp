@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "spline/types.hpp"
 #include "types/eigen_types.hpp"
 
@@ -10,14 +8,14 @@
 namespace reprojection::spline {
 
 struct R3Spline {
-    template <DerivativeOrder Derivative>
-    static VectorKd B(double const u_i) {
+    template <typename T, DerivativeOrder Derivative>
+    static VectorK<T> B(T const u_i) {
         static int constexpr derivative_order{static_cast<int>(Derivative)};
 
         static VectorKd const p{polynomial_coefficients_.row(derivative_order)};
 
-        VectorKd const t{TimePolynomial<double>(K, u_i, derivative_order)};
-        VectorKd const du{p.cwiseProduct(t)};
+        VectorK<T> const t{TimePolynomial<T>(K, u_i, derivative_order)};
+        VectorK<T> const du{p.cwiseProduct(t)};
 
         return M_ * du;
     }
@@ -34,15 +32,14 @@ struct R3Spline {
     // We pass the Eigen::Ref by const& itself due to information from this link:
     //      https://stackoverflow.com/questions/21132538/correct-usage-of-the-eigenref-class
     template <typename T, DerivativeOrder Derivative>
-    static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, double const u_i,
-                               std::uint64_t const delta_t_ns) {
+    static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, T const u_i, std::uint64_t const delta_t_ns) {
         static int constexpr derivative_order{static_cast<int>(Derivative)};
 
         // TODO(Jack): Is this the right place to convert from ns to s space? Is there a fundamental problem with this
         // here or do we maybe introduce some rounding error or anything like that?
         double const delta_t_s{static_cast<double>(delta_t_ns) / 1'000'000'000};
 
-        return P * B<Derivative>(u_i).template cast<T>() / std::pow(delta_t_s, derivative_order);
+        return P * B<T, Derivative>(u_i) / std::pow(delta_t_s, derivative_order);
     }
 
     static inline MatrixKd const M_{BlendingMatrix(K)};

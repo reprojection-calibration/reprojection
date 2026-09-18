@@ -19,7 +19,7 @@ MatrixX<T> PolynomialCoefficients(int const k) {
     result.row(0).setOnes();
     for (int i{1}; i < k; ++i) {
         for (int j{i}; j < k; ++j) {
-            result(i, j) = (j - (i - 1)) * result(i - 1, j);
+            result(i, j) = static_cast<T>(j - (i - 1)) * result(i - 1, j);
         }
     }
 
@@ -29,13 +29,13 @@ MatrixX<T> PolynomialCoefficients(int const k) {
 // NOTE(Jack): In the spline code in this package we sometimes we have to call it u or u_i depending if we also have the
 // vector u in the same namespace.
 template <typename T>
-VectorX<T> TimePolynomial(int const k, double const u, int const derivative) {
+VectorX<T> TimePolynomial(int const k, T const u, int const derivative) {
     assert(k >= 1);
     assert(0 <= u and u < 1);
     assert(0 <= derivative and derivative <= k - 1);
 
     VectorX<T> result{VectorX<T>::Zero(k)};
-    result(derivative) = 1.0;
+    result(derivative) = static_cast<T>(1.0);
     for (int i{1 + derivative}; i < k; ++i) {
         result(i) = result(i - 1) * u;
     }
@@ -50,7 +50,7 @@ VectorX<T> TimePolynomial(int const k, double const u, int const derivative) {
 // TODO(Jack): We also can calculate std::pow(delta_t_ns, derivative_order) in the constructor ahead of time if we
 // find out it causes some problems.
 template <typename T>
-VectorK<T> CalculateU(double const u_i, DerivativeOrder const derivative_order = DerivativeOrder::Null) {
+VectorK<T> CalculateU(T const u_i, DerivativeOrder const derivative_order = DerivativeOrder::Null) {
     assert(0 <= u_i and u_i < 1);
 
     // Static means it only evaluates once :) K is a project constant which is why its ok we do this.

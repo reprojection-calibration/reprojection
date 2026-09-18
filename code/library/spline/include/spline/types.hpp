@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spline/constants.hpp"
-#include "types/eigen_types.hpp"
+#include <Eigen/Dense>
 
 namespace reprojection::spline {
 

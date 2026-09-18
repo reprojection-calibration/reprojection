@@ -33,7 +33,7 @@ struct So3Spline {
     // allows us to generate all three version of the evaluate function from the same single source code. Please read
     // online to see how "if constexpr" works, it is not the right place to explain it here.
     template <typename T, DerivativeOrder Derivative>
-    static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, double const u_i,
+    static Vector3<T> Evaluate(Eigen::Ref<MatrixNK<T> const> const& P, T const u_i,
                                std::uint64_t const delta_t_ns) {
         std::array<Vector3<T>, D> const delta_phis{DeltaPhi(P)};
 
@@ -41,10 +41,10 @@ struct So3Spline {
         double const delta_t_s{static_cast<double>(delta_t_ns) / 1'000'000'000};
 
         int constexpr order{static_cast<int>(Derivative)};
-        std::array<VectorKd, order + 1> weights;  // We use an array because the required size is known at compile time
+        std::array<VectorK<T>, order + 1> weights;  // We use an array because the required size is known at compile time
         for (int j{0}; j <= order; ++j) {
-            VectorKd const u_j{CalculateU<double>(u_i, static_cast<DerivativeOrder>(j))};
-            VectorKd const weight_j{M_ * u_j / std::pow(delta_t_s, j)};
+            VectorK<T> const u_j{CalculateU<T>(u_i, static_cast<DerivativeOrder>(j))};
+            VectorK<T> const weight_j{M_ * u_j / std::pow(delta_t_s, j)};
 
             weights[j] = weight_j;
         }
@@ -54,19 +54,19 @@ struct So3Spline {
         Vector3<T> acceleration{Vector3<T>::Zero()};
 
         for (int j{0}; j < D; ++j) {
-            VectorKd const& weight0{weights[0]};
+            VectorK<T> const& weight0{weights[0]};
             Matrix3<T> const delta_R_j{geometry::Exp<T>(T(weight0[j + 1]) * delta_phis[j])};
             rotation = geometry::Log<T>(delta_R_j * geometry::Exp<T>(rotation));
 
             if constexpr (Derivative == DerivativeOrder::First or Derivative == DerivativeOrder::Second) {
                 Matrix3<T> const inverse_delta_R_j{delta_R_j.inverse()};
 
-                VectorKd const& weight1{weights[1]};
+                VectorK<T> const& weight1{weights[1]};
                 Vector3<T> const delta_v_j{T(weight1[j + 1]) * delta_phis[j]};
                 velocity = delta_v_j + (inverse_delta_R_j * velocity);
 
                 if constexpr (Derivative == DerivativeOrder::Second) {
-                    VectorKd const& weight2{weights[2]};
+                    VectorK<T> const& weight2{weights[2]};
                     Vector3<T> const delta_a_j{T(weight2[j + 1]) * delta_phis[j] + velocity.cross(delta_v_j)};
                     acceleration = delta_a_j + (inverse_delta_R_j * acceleration);
                 }

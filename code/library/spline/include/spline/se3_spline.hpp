@@ -40,7 +40,7 @@ class Se3Spline {
      * functions are being initialized and added to the problem.
      */
     template <typename T>
-    static Array6<T> EvaluatePose(Matrix2NK<T> const& P, double const u_i, uint64_t const delta_t_ns) {
+    static Array6<T> EvaluatePose(Matrix2NK<T> const& P, T const u_i, uint64_t const delta_t_ns) {
         assert(0 <= u_i and u_i < 1);
         assert(delta_t_ns > 0);
 

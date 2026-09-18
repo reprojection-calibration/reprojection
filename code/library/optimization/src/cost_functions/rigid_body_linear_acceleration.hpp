@@ -28,15 +28,15 @@ class RigidBodyLinearAcceleration {
         auto const so3{P.template topRows<3>()};
 
         Eigen::Map<Eigen::Vector<T, 6> const> tf_imu_co(tf_imu_co_ptr);
-        Vector3<T> const omega_co{So3Spline::Evaluate<T, Order::First>(so3, u_i_, delta_t_ns_)};
-        Vector3<T> const alpha_co{So3Spline::Evaluate<T, Order::Second>(so3, u_i_, delta_t_ns_)};
+        Vector3<T> const omega_co{So3Spline::Evaluate<T, Order::First>(so3, T(u_i_), delta_t_ns_)};
+        Vector3<T> const alpha_co{So3Spline::Evaluate<T, Order::Second>(so3, T(u_i_), delta_t_ns_)};
 
         // Get the linear acceleration of the camera with reference to the world and then transform this to reference
         // the camera optical frame using our known world referenced orientation.
-        Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, u_i_, delta_t_ns_)};
+        Vector3<T> const aa_w_co{So3Spline::Evaluate<T, Order::Null>(so3, T(u_i_), delta_t_ns_)};
         Matrix3<T> const R_co_w{geometry::Exp<T>(aa_w_co).transpose()};
         // "acc_cam_w" - "acceleration of the camera with respect to the world frame" - this is not a transformation!
-        Vector3<T> const acc_cam_w{R3Spline::Evaluate<T, Order::Second>(P.template bottomRows<3>(), u_i_, delta_t_ns_)};
+        Vector3<T> const acc_cam_w{R3Spline::Evaluate<T, Order::Second>(P.template bottomRows<3>(), T(u_i_), delta_t_ns_)};
         Vector3<T> const acc_cam_co{R_co_w * acc_cam_w};
 
         // Transform the camera's acceleration to the IMU frame. This is the only place in the entire extrinsic

@@ -54,6 +54,11 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
                                        spline.ControlPoint(i + 3));
     }
 
+    std::map<AssetId, double> time_offsets;
+    for (auto const cam_id : problem.cameras | std::views::keys) {
+        time_offsets.insert({cam_id, 0.0});
+    }
+
     // Reprojection residuals
     for (auto const& [camera_id, sample_timestamp_ns, _, bundle] : problem.observations) {
         auto const normalized_position{
@@ -80,7 +85,8 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
                                            spline.ControlPoint(i),               //
                                            spline.ControlPoint(i + 1),           //
                                            spline.ControlPoint(i + 2),           //
-                                           spline.ControlPoint(i + 3));
+                                           spline.ControlPoint(i + 3),           //
+                                           &time_offsets.at(camera_id));
         }
 
         if (not camera_options.optimize_intrinsic) {
