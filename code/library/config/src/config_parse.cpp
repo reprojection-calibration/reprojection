@@ -23,13 +23,11 @@ Config Config::Parse(toml::table const& table) {
 
 // The table is not required, but we have sensible defaults.
 Config::Application Config::Application::Parse(toml::table const& table) {
-    RejectUnexpectedKeys(table, {"show_extraction", "threads", "approx_sync_delta_ms"}, "application");
+    RejectUnexpectedKeys(table, {"approx_sync_delta_ms", "show_extraction", "threads"}, "application");
 
     Application config{};
-    OverrideIfPresent(table, "show_extraction", config.show_extraction);
-    OverrideIfPresent(table, "threads", config.threads);
 
-    // NOTE(Jack): This is a kinda hacky way to do this, but we need to offer the user a more interpreateble unit in the
+    // NOTE(Jack): This is a kinda hacky way to do this, but we need to offer the user a more interpretable unit in the
     // config (i.e. milliseconds) but the library needs nanoseconds.
     double approx_sync_delta_ms{0};
     OverrideIfPresent(table, "approx_sync_delta_ms", approx_sync_delta_ms);
@@ -37,21 +35,21 @@ Config::Application Config::Application::Parse(toml::table const& table) {
         config.approx_sync_delta_ns = static_cast<uint64_t>(1e6 * approx_sync_delta_ms);
     }
 
+    OverrideIfPresent(table, "show_extraction", config.show_extraction);
+    OverrideIfPresent(table, "threads", config.threads);
+
     return config;
 }
 
 Config::Camera Config::Camera::Parse(toml::table const& table, int const index) {
-    RejectUnexpectedKeys(table, {"camera_model", "index", "sensor_name", "focal_length"}, "camera");
+    RejectUnexpectedKeys(table, {"camera_model", "focal_length", "index", "sensor_name"}, "camera");
 
     Camera config{};
 
-    // Required keys
     config.camera_model = ToCameraModel(Require<std::string>(table, "camera_model"));
+    config.focal_length = Optional<double>(table, "focal_length");
     config.index = index;
     config.sensor_name = Require<std::string>(table, "sensor_name");
-
-    // Optional keys
-    config.focal_length = Optional<double>(table, "focal_length");
 
     return config;
 }

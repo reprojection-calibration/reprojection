@@ -23,19 +23,6 @@ struct Config {
     struct Application {
         static Application Parse(toml::table const& table);
 
-        /*! \brief Visualize the target extraction step.
-         *
-         *  \warning A GUI is required to display the visualization. Set to false if running headless.
-         */
-        bool show_extraction{false};
-        /*! \brief Number of threads available.
-         *
-         * Number of threads used to multithread the various ceres solver calls. The default behavior automatically
-         * detects the number of available threads and uses that value minus one.
-         *
-         * If your system is not compatible with the C++ std::thread API you must manually set this parameter.
-         */
-        int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
         /*! \brief Stereo frame approximate time synchronization threshold.
          *
          * A timestamp within ±`approx_sync_delta_ns` is considered synchronized. The default value of 3ms is chosen to
@@ -51,6 +38,19 @@ struct Config {
          *  \endcode
          */
         uint64_t approx_sync_delta_ns{3'000'000};
+        /*! \brief Visualize the target extraction step.
+         *
+         *  \warning A GUI is required to display the visualization. Set to false if running headless.
+         */
+        bool show_extraction{false};
+        /*! \brief Number of threads available.
+         *
+         * Number of threads used to multithread the various ceres solver calls. The default behavior automatically
+         * detects the number of available threads and uses that value minus one.
+         *
+         * If your system is not compatible with the C++ std::thread API you must manually set this parameter.
+         */
+        int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
     };
 
     struct Camera {
@@ -59,9 +59,9 @@ struct Config {
         static Camera Parse(toml::table const& table, int index);
 
         CameraModel camera_model;
+        std::optional<double> focal_length{std::nullopt};
         int index;
         std::string sensor_name;
-        std::optional<double> focal_length{std::nullopt};
     };
 
     struct Imu {
