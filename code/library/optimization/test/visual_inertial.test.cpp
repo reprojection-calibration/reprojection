@@ -45,6 +45,8 @@ TEST(OptimizationVisualInertialOpt, TestVisualInertialOpt) {
                                                                       AssetId{0}, imu_data)};
     auto const [result, ceres_state]{optimization::VisualInertial::Solve(problem, 1)};
 
+    std::cout << ceres_state.solver_summary.FullReport() << std::endl;
+
     EXPECT_EQ(ceres_state.solver_summary.termination_type, ceres::TerminationType::CONVERGENCE);
     EXPECT_TRUE(result.inertial_state.se3_imu_rig.isApprox(initial_se3_imu_rig, 1e-2));
     EXPECT_TRUE(result.inertial_state.gravity_w.isApprox(initial_gravity, 1e-2));
