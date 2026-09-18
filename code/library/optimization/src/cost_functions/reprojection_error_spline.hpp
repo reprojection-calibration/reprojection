@@ -28,11 +28,20 @@ class ReprojectionErrorSpline_T {
                     T const* const cp_1_ptr, T const* const cp_2_ptr, T const* const cp_3_ptr,
                     T const* const time_offset_ptr, T* const residual_ptr) const {
         auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
-        T const time_offset{*time_offset_ptr};
+        T const offset_u_i{*time_offset_ptr + u_i_};
+
+        // HACK!
+        if (offset_u_i < 0 or 1 <= offset_u_i) {
+            Eigen::Map<Array2<T>> residual(residual_ptr);
+            residual.setConstant(T(256));
+
+            return true;
+        }
+        std::cout << u_i_ << " " << *time_offset_ptr << std::endl;
 
         // Evaluate the se3 pose from the spline and then return the normal reprojection error using the evaluated
         // spline pose as the world to rig transform.
-        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P,  u_i_ - time_offset, delta_t_ns_)};
+        Array6<T> const se3_w_rig{spline::Se3Spline::EvaluatePose<T>(P, offset_u_i, delta_t_ns_)};
         Array6<T> const se3_rig_w{geometry::InverseTransform(se3_w_rig)};
 
         return ReprojectionError_T<T_Model>(pixel_, point_w_, bounds_)

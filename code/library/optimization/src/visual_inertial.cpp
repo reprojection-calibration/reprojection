@@ -110,7 +110,7 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
     ceres::Solve(ceres_state.solver_options, &ceres_problem, &ceres_state.solver_summary);
 
     for (auto const [id, offset] : time_offsets) {
-        std::cout << id.value << " " << offset << std::endl;
+        std::cout << id.value << " " << static_cast<double>(spline.GetTimeHandler().delta_t_ns_) * offset << std::endl;
     }
 
     return {result, ceres_state};
