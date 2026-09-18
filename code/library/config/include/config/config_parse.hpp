@@ -10,6 +10,8 @@
 
 namespace reprojection::config {
 
+// Doc format taken from https://www.doxygen.nl/manual/docblocks.html#cppblock
+
 // TODO(Jack): Make the actual config datatype independent of the parsing methods. It looks nice to have them together
 // like this, but I do not think it is required. One downside of the current setup is that this is found in the config::
 // namespace which makes using it more verbose. It also has a dependency on the toml package which is then transiently
@@ -21,9 +23,34 @@ struct Config {
     struct Application {
         static Application Parse(toml::table const& table);
 
+        /*! \brief Visualize the target extraction step.
+         *
+         *  \warning A GUI is required to display the visualization. Set to false if running headless.
+         */
         bool show_extraction{false};
+        /*! \brief Number of threads available.
+         *
+         * Number of threads used to multithread the various ceres solver calls. The default behavior automatically
+         * detects the number of available threads and uses that value minus one.
+         *
+         * If your system is not compatible with the C++ std::thread API you must manually set this parameter.
+         */
         int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
-        uint64_t approx_sync_delta_ns{3'000'000};  // 3ms, Roughly 10% of a 30Hz camera measurement interval.
+        /*! \brief Stereo frame approximate time synchronization threshold.
+         *
+         * A timestamp within ±`approx_sync_delta_ns` is considered synchronized. The default value of 3ms is chosen to
+         * represent about 10% of a 30Hz camera's image interval.
+         *
+         * This value is only used to synchronize stereo image streams and nothing else. Visual-inertial calibration
+         * uses a continuous spline representation and therefore does not require synchronization.
+         *
+         *  \par TOML Config
+         *  The actual configuration file parameter should be input in milliseconds and named accordingly.
+         *  \code{.toml}
+         *  approx_sync_delta_ms = 3.0
+         *  \endcode
+         */
+        uint64_t approx_sync_delta_ns{3'000'000};
     };
 
     struct Camera {
