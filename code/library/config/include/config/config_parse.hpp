@@ -72,8 +72,8 @@ struct Config {
          *
          *  \par Config Note
          *  The configuration file parameter should be written in snake_case. See enum \ref reprojection::CameraModel
-         *  for the list of supported values and the function \ref reprojection::ToCameraModel for the
-         *  PascalCase <-> snake_case conversion logic.
+         *  for the list of supported values and the function \ref reprojection::ToCameraModel for the PascalCase <->
+         *  snake_case conversion logic.
          *  \code{.toml}
          *  camera_model = "double_sphere"
          *  \endcode
@@ -127,37 +127,30 @@ struct Config {
         std::string sensor_name;
     };
 
-    // TODO(Jack): We should replace this with the target info type itself! It is a complete copy.
+    // TODO(Jack): This config type and the TargetInfo type are extremely similar, can we refactor to avoid duplication?
     struct Target {
         static Target Parse(toml::table const& table);
 
+        /*! \brief The target's type.
+         *
+         *  \par Config Status
+         *  Required.
+         *
+         *  \par Config Note
+         *  The configuration file parameter should be written in snake_case. See enum \ref reprojection::TargetType
+         *  for the list of supported values and the function \ref reprojection::ToTargetType for the PascalCase <->
+         *  snake_case conversion logic.
+         *  \code{.toml}
+         *  camera_model = "double_sphere"
+         *  \endcode
+         */
         TargetType target_type;
         std::array<int, 2> size;
         double unit_dimension{1.0};
         bool asymmetric{false};
     };
 
-    // NOTE(Jack): At a high level there are three kinds of config "requirements"
-    //
-    //  1) required
-    //  2) optional with default value
-    //  3) optional with no default value
-    //
-    // This can apply both to the top level configs below and the individual keys within the configs.
-    //
-    // Required configs are obvious, those are the things that the program cannot run without, for example the name of
-    // the camera sensor or the type of target used. Optional with default value configs are those for which we can set
-    // a sensible default value; for example the number of threads used by the optimizer can be parameterized if the
-    // user wants, but we can also automatically set a value if they don't care.
-    //
-    // Optional with no default value are the rarest type and are unique because they actually control the pipeline
-    // execution; the only one at time of writing (30.06.2026) is Config::Imu. If the IMU table is in the config file
-    // then that is the same as the user telling the pipeline to do a extrinsic calibration. If it is not present in the
-    // config file then the user is only asking for a camera intrinsic calibration. Whether or not this is easy for the
-    // user to understand, only time will tell :)
-    //
-    // Look at the config_parse.test.cpp for hands-on examples of what valid configs are and are not.
-    /*! \brief The calibration application configuration.
+    /*! \brief The calibration application configuration/.
      *
      *  \par Config Status
      *  Optional.
@@ -185,7 +178,20 @@ struct Config {
      *  \endcode
      */
     std::vector<Camera> cameras;
+    /*! \brief The imu sensor calibration configuration.
+     *
+     * Providing an imu sensor configuration will configure the visual-inertial calibration workflow. Only one imu is
+     * supported as of 21.09.2026.
+     *
+     *  \par Config Status
+     *  Optional.
+     */
     std::optional<Imu> imu;
+    /*! \brief The calibration target configuration.
+     *
+     *  \par Config Status
+     *  Required.
+     */
     Target target;
 };
 

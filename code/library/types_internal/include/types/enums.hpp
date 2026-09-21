@@ -95,6 +95,11 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     }
 }
 
+/*! \brief Supported calibration targets.
+ *
+ *  \warning Reprojection does not support the Kalibr style Aprilgrid, and instead introduced the new and improved
+ *  Aprilgrid3.
+ */
 enum class TargetType {
     Checkerboard,
     CircleGrid,
@@ -113,7 +118,10 @@ inline std::string ToString(TargetType const target_type) {
     }
 }
 
-// TODO(Jack): Is this the right place to put functions like this? What about testing?
+// TODO ADD SHOWINLINESOURCE! UPGRADE DOXYGEN TO DO SO
+/*! \brief Convert a human readable snake_case string into a \ref reprojection::TargetType enum.
+ *
+ */
 inline TargetType ToTargetType(std::string const& enum_string) {
     if (enum_string == "checkerboard") {
         return TargetType::Checkerboard;
@@ -126,11 +134,6 @@ inline TargetType ToTargetType(std::string const& enum_string) {
                                  enum_string);
     }
 }
-
-enum class InitializationType {
-    ParabolaLine,
-    VanishingPoint,
-};
 
 enum class CacheStatus {
     CacheHit,
