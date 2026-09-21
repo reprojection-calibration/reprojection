@@ -1,4 +1,4 @@
-# Notes
+# Projection Function Notes
 
 ## Why only one focal length (f) and not two (fx and fy)?
 

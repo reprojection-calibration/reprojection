@@ -1,4 +1,4 @@
-# April Tag Generation
+# April Tag Generation Notes
 
 * Generation: https://github.com/AprilRobotics/apriltag-generation
 * Detection: https://github.com/AprilRobotics/apriltag
