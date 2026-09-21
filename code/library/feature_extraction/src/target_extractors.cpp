@@ -11,9 +11,12 @@ extern "C" {
 
 namespace reprojection::feature_extraction {
 
+// WARN(Jack): See how we subtract one from the pattern_size here in the constructor! This is so that the user can input
+// the obvious counted number of rows and columns. But internally we of course only work with the intersections with is
+// rows/cols minus one.
 CheckerboardExtractor::CheckerboardExtractor(cv::Size const& pattern_size, const double unit_dimension)
-    : TargetExtractor(pattern_size, unit_dimension) {
-    point_indices_ = eigen_utilities::GenerateGridIndices(pattern_size_.height, pattern_size_.width);
+    : TargetExtractor(pattern_size - cv::Size{1, 1}, unit_dimension) {
+    point_indices_ = eigen_utilities::GenerateGridIndices(pattern_size_.height - 1, pattern_size_.width - 1);
     points_ = MatrixX3d{point_indices_.rows(), 3};
     points_.leftCols(2) = unit_dimension_ * point_indices_.cast<double>();
     points_.col(2).setZero();  // Flat on calibration board, z=0.

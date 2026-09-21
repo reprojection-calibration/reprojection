@@ -98,12 +98,39 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
 // TODO(Jack): Add a description of how to get the numbers of rows and columns and unit dimension for each target type!
 /*! \brief Supported calibration targets.
  *
- *  \warning Reprojection does not support the Kalibr style Aprilgrid, and instead introduced the new and improved
- *  Aprilgrid3.
+ *  \par Unit Dimension Measurement
+ *  To mitigate measurement error measure the board's entire height/width and divide by the corresponding the number of
+ *  unit lengths.
+ *
+ *  \note Reprojection does not support the Kalibr style Aprilgrid, and instead uses the new and improved Aprilgrid3.
+ *
+ *  \warning Targets must preserve their original dimensions and aspect ratio and must not be stretched, skewed, warped,
+ *  or bent.
  */
 enum class TargetType {
+    /*! \par Unit Dimension
+     *  The side length of a single checkerboard square.
+     *  \par Size
+     *  The number of rows and columns as you would count normally. Note that the internal algorithm uses this value
+     *  minus one because the feature extractor actually extracts the internal checkerboard corners.
+     */
     Checkerboard,
+    /*! \par Unit Dimension
+     *  The distance between the center's of two row/column adjacent circles. For asymmetric circle grids this cannot be
+     *  measured directly.
+     *  \par Size
+     *  The total number of rows and columns regardless if symmetric or asymmetric. Please note that the standard OpenCv
+     *  asymmetric circle grid specification counts only the asymmetric rows but all the columns to specify the size. Do
+     *  not do this!
+     */
     CircleGrid,
+    /*! \par Unit Dimension
+     *  The length of a single square between the corner sharpening elements. If measuring the total internal target
+     *  height/width (i.e. excluding the outer sharpening elements) make sure to account for the internal sharpening
+     *  elements widths which are each 1/3 `unit_dimension` width.
+     *  \par Size
+     *  The total number of april tag rows and columns.
+     */
     Aprilgrid3,
 };
 
