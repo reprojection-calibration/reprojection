@@ -75,7 +75,7 @@ inline std::string ToString(CameraModel const camera_model) {
 }
 
 // TODO ADD SHOWINLINESOURCE! UPGRADE DOXYGEN TO DO SO
-/*! \brief Convert a human readable string into a \ref reprojection::CameraModel enum.
+/*! \brief Convert a human readable snake_case string into a \ref reprojection::CameraModel enum.
  *
  */
 inline CameraModel ToCameraModel(std::string_view camera_model) {

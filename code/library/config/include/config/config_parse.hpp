@@ -69,7 +69,18 @@ struct Config {
          *  \endcode
          */
         CameraModel camera_model;
+        /*! \brief Estimated focal length (in pixels).
+         *
+         * Used to initialize the robust intrinsic initialization strategy. The parameter should be within one half
+         * `focal_length` of the actual value.
+         *
+         * The default behavior when no `focal_length` configuration file parameter is passed sets the initial focal
+         * length to one half the maximum image dimension. If you believe your focal length is larger than the largest
+         * image dimension, you probably want to set this parameter.
+         */
         std::optional<double> focal_length{std::nullopt};
+        /*! \brief Estimated focal length (in pixels).
+         */
         int index;
         std::string sensor_name;
     };
