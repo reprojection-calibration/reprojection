@@ -62,30 +62,7 @@ struct Config {
         int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
     };
 
-    /*! \brief The camera sensor calibration configuration.
-     *
-     * Every calibration workflow requires at least one configured camera, and each calibrated camera must have its own
-     * unique configuration. The first camera (i.e. `cam0`) is taken as the reference camera whose coordinate frame
-     * defines the calibration rig for stereo and visual-inertial calibration workflows.
-     *
-     *  \par Config Status
-     *  Required.
-     *
-     *  \par Config Note
-     *  The camera configuration requires an "indexed configuration" format. Each camera configuration table must be
-     *  named as `[cam<index>]` where `index` starts from zero and increases incrementally by one for each additional
-     *  camera.
-     *  \code{.toml}
-     *  [cam0]
-     *  ...
-     *
-     *  [cam1]
-     *  ...
-     *  \endcode
-     */
     struct Camera {
-        // NOTE(Jack): We have to pass the index here because that comes from the parsed table header which is already
-        // removed by the time we parse its' contents.
         static Camera Parse(toml::table const& table, int index);
 
         /*! \brief The camera's selected projection model type.
@@ -139,10 +116,18 @@ struct Config {
     struct Imu {
         static std::optional<Imu> Parse(toml::table const& table);
 
+        /*! \brief Human readable identifier.
+         *
+         *  \par Config Status
+         *  Required.
+         *
+         * Used to identify the input data stream from application data sources (ex. ROS topic names) and improve human
+         * readability of the diagnostic outputs and dashboard display.
+         */
         std::string sensor_name;
     };
 
-    // TODO(Jack): We need to replace this with the target info type itself! It is a complete copy.
+    // TODO(Jack): We should replace this with the target info type itself! It is a complete copy.
     struct Target {
         static Target Parse(toml::table const& table);
 
@@ -172,7 +157,33 @@ struct Config {
     // user to understand, only time will tell :)
     //
     // Look at the config_parse.test.cpp for hands-on examples of what valid configs are and are not.
+    /*! \brief The calibration application configuration.
+     *
+     *  \par Config Status
+     *  Optional.
+     */
     Application application;
+    /*! \brief The camera sensor calibration configurations.
+     *
+     * Every calibration workflow requires at least one configured camera, and each calibrated camera must have its own
+     * unique configuration. The first camera (i.e. `cam0`) is taken as the reference camera whose coordinate frame
+     * defines the calibration rig for stereo and visual-inertial calibration workflows.
+     *
+     *  \par Config Status
+     *  Required.
+     *
+     *  \par Config Note
+     *  The camera configuration requires an "indexed configuration" format. Each camera configuration table must be
+     *  named as `[cam<index>]` where `index` starts from zero and increases incrementally by one for each additional
+     *  camera.
+     *  \code{.toml}
+     *  [cam0]
+     *  ...
+     *
+     *  [cam1]
+     *  ...
+     *  \endcode
+     */
     std::vector<Camera> cameras;
     std::optional<Imu> imu;
     Target target;
