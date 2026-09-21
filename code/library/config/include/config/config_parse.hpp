@@ -31,7 +31,10 @@ struct Config {
          * This value is only used to synchronize stereo image streams and nothing else. Visual-inertial calibration
          * uses a continuous spline representation and therefore does not require synchronization.
          *
-         *  \par TOML Config
+         *  \par Config Status
+         *  Optional.
+         *
+         *  \par Config Note
          *  The actual configuration file parameter should be input in milliseconds and named accordingly.
          *  \code{.toml}
          *  approx_sync_delta_ms = 3.0
@@ -40,19 +43,46 @@ struct Config {
         uint64_t approx_sync_delta_ns{3'000'000};
         /*! \brief Visualize the target extraction step.
          *
+         *  \par Config Status
+         *  Optional.
+         *
          *  \warning A GUI is required to display the visualization. Set to false if running headless.
          */
         bool show_extraction{false};
         /*! \brief Number of threads available.
          *
-         * Number of threads used to multithread the various ceres solver calls. The default behavior automatically
-         * detects the number of available threads and uses that value minus one.
+         * Number of threads used to multithread the Ceres Solver calls. The default behavior automatically detects the
+         * number of available threads and uses that value minus one.
          *
          * If your system is not compatible with the C++ std::thread API you must manually set this parameter.
+         *
+         *  \par Config Status
+         *  Optional.
          */
         int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
     };
 
+    /*! \brief The camera sensor calibration configuration.
+     *
+     * Every calibration workflow requires at least one configured camera, and each calibrated camera must have its own
+     * unique configuration. The first camera (i.e. `cam0`) is taken as the reference camera whose coordinate frame
+     * defines the calibration rig for stereo and visual-inertial calibration workflows.
+     *
+     *  \par Config Status
+     *  Required.
+     *
+     *  \par Config Note
+     *  The camera configuration requires an "indexed configuration" format. Each camera configuration table must be
+     *  named as `[cam<index>]` where `index` starts from zero and increases incrementally by one for each additional
+     *  camera.
+     *  \code{.toml}
+     *  [cam0]
+     *  ...
+     *
+     *  [cam1]
+     *  ...
+     *  \endcode
+     */
     struct Camera {
         // NOTE(Jack): We have to pass the index here because that comes from the parsed table header which is already
         // removed by the time we parse its' contents.
@@ -60,7 +90,10 @@ struct Config {
 
         /*! \brief The camera's selected projection model type.
          *
-         *  \par TOML Config
+         *  \par Config Status
+         *  Required.
+         *
+         *  \par Config Note
          *  The configuration file parameter should be written in snake_case. See enum \ref reprojection::CameraModel
          *  for the list of supported values and the function \ref reprojection::ToCameraModel for the
          *  PascalCase <-> snake_case conversion logic.
@@ -69,19 +102,37 @@ struct Config {
          *  \endcode
          */
         CameraModel camera_model;
-        /*! \brief Estimated focal length (in pixels).
+        /*! \brief Estimated focal length (in pixel).
          *
-         * Used to initialize the robust intrinsic initialization strategy. The parameter should be within one half
-         * `focal_length` of the actual value.
+         * Used to initialize the robust intrinsic initialization strategy. The actual focal length should be within one
+         * half the provided `focal_length` parameter.
          *
          * The default behavior when no `focal_length` configuration file parameter is passed sets the initial focal
          * length to one half the maximum image dimension. If you believe your focal length is larger than the largest
          * image dimension, you probably want to set this parameter.
+         *
+         *  \par Config Status
+         *  Optional.
          */
         std::optional<double> focal_length{std::nullopt};
-        /*! \brief Estimated focal length (in pixels).
+        /*! \brief Configuration derived unique identifier.
+         *
+         *  \par Config Status
+         *  Automatic.
+         *
+         *  \par Config Note
+         *  This SHOULD NOT be entered as a separate configuration file parameter. It is automatically derived from the
+         *  camera table index (ex. `[cam0]` would be index 0).
          */
         int index;
+        /*! \brief Human readable identifier.
+         *
+         *  \par Config Status
+         *  Required.
+         *
+         * Used to identify the input data stream from application data sources (ex. ROS topic names) and improve human
+         * readability of the diagnostic outputs and dashboard display.
+         */
         std::string sensor_name;
     };
 
