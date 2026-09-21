@@ -95,6 +95,7 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     }
 }
 
+// TODO(Jack): Add a description of how to get the numbers of rows and columns and unit dimension for each target type!
 /*! \brief Supported calibration targets.
  *
  *  \warning Reprojection does not support the Kalibr style Aprilgrid, and instead introduced the new and improved

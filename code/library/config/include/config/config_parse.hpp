@@ -41,6 +41,7 @@ struct Config {
          *  \endcode
          */
         uint64_t approx_sync_delta_ns{3'000'000};
+
         /*! \brief Visualize the target extraction step.
          *
          *  \par Config Status
@@ -49,6 +50,7 @@ struct Config {
          *  \warning A GUI is required to display the visualization. Set to false if running headless.
          */
         bool show_extraction{false};
+
         /*! \brief Number of threads available.
          *
          * Number of threads used to multithread the Ceres Solver calls. The default behavior automatically detects the
@@ -79,6 +81,7 @@ struct Config {
          *  \endcode
          */
         CameraModel camera_model;
+
         /*! \brief Estimated focal length (in pixel).
          *
          * Used to initialize the robust intrinsic initialization strategy. The actual focal length should be within one
@@ -92,6 +95,7 @@ struct Config {
          *  Optional.
          */
         std::optional<double> focal_length{std::nullopt};
+
         /*! \brief Configuration derived unique identifier.
          *
          *  \par Config Status
@@ -102,6 +106,7 @@ struct Config {
          *  camera table index (ex. `[cam0]` would be index 0).
          */
         int index;
+
         /*! \brief Human readable identifier.
          *
          *  \par Config Status
@@ -131,6 +136,29 @@ struct Config {
     struct Target {
         static Target Parse(toml::table const& table);
 
+        /*! \brief Is the `circle_grid` target asymmetric.
+         *
+         *  \par Config Status
+         *  Optional.
+         *
+         *  \par Config Note
+         *  The 'circle_grid` target is the only target that supports the `asymmetric` configuration parameter. To
+         *  configure this please use the following syntax:
+         *  \code{.toml}
+         *  [target]
+         *  ...
+         *  circle_grid.asymmetric = true
+         *  \endcode
+         */
+        bool asymmetric{false};
+
+        /*! \brief The number rows and columns.
+         *
+         *  \par Config Status
+         *  Required.
+         */
+        std::array<int, 2> size;
+
         /*! \brief The target's type.
          *
          *  \par Config Status
@@ -141,13 +169,21 @@ struct Config {
          *  for the list of supported values and the function \ref reprojection::ToTargetType for the PascalCase <->
          *  snake_case conversion logic.
          *  \code{.toml}
-         *  camera_model = "double_sphere"
+         *  target_type = "circle_grid"
          *  \endcode
          */
         TargetType target_type;
-        std::array<int, 2> size;
+
+        /*! \brief The target's metric scale parameter.
+         *
+         *  \par Config Status
+         *  Optional.
+         *
+         *  \par Calibration Scale
+         *  For metrically scaled stereo and visual-inertial calibration the unit dimension must be set to the target's
+         *  true unit dimension.
+         */
         double unit_dimension{1.0};
-        bool asymmetric{false};
     };
 
     /*! \brief The calibration application configuration/.
