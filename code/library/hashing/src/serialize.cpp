@@ -96,7 +96,7 @@ std::string Serialize(config::Config::Target const& data) {
 
 std::string Serialize(TargetInfo const& data) {
     config::Config::Target const data1{
-        data.target_type, {data.height, data.width}, data.unit_dimension, data.asymmetric};
+        data.asymmetric, {data.height, data.width}, data.target_type, data.unit_dimension};
 
     return Serialize(data1);
 }

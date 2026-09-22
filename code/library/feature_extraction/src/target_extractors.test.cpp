@@ -12,7 +12,7 @@ using namespace reprojection;
 using namespace reprojection::feature_extraction;
 
 TEST(TargetExtractors, TestCheckerboardExtractor) {
-    cv::Size const pattern_size{4, 3};  // (width, height) == (cols, rows)
+    cv::Size const pattern_size{5, 4};  // (width, height) == (cols, rows)
     int const square_size_pixels{50};
     cv::Mat const image{GenerateCheckerboard(pattern_size, square_size_pixels)};
 
@@ -23,17 +23,19 @@ TEST(TargetExtractors, TestCheckerboardExtractor) {
     ASSERT_TRUE(target.has_value());
 
     MatrixX2d const& pixels{target->bundle.pixels};
-    EXPECT_EQ(pixels.rows(), pattern_size.height * pattern_size.width);
+    // The internal dimensions are one smaller than the actual checkerboard dimensions. The extractor extracts these
+    // "internal" corners and not the rows/cols directly.
+    EXPECT_EQ(pixels.rows(), (pattern_size.width - 1) * (pattern_size.height - 1));
     EXPECT_TRUE(pixels.row(0).isApprox(Vector2d{100, 100}.transpose(), 1e-6));   // First pixel - heuristic
     EXPECT_TRUE(pixels.row(11).isApprox(Vector2d{250, 200}.transpose(), 1e-6));  // Last pixel - heuristic
 
     MatrixX3d const& points{target->bundle.points};
-    EXPECT_EQ(points.rows(), pattern_size.height * pattern_size.width);
+    EXPECT_EQ(points.rows(), pixels.rows());
     EXPECT_TRUE(points.row(0).isApprox(Vector3d{0, 0, 0}.transpose()));     // First pixel - heuristic
     EXPECT_TRUE(points.row(11).isApprox(Vector3d{1, 1.5, 0}.transpose()));  // Last pixel - heuristic
 
     ArrayX2i const& indices{target->indices};
-    EXPECT_EQ(indices.rows(), pattern_size.width * pattern_size.height);
+    EXPECT_EQ(indices.rows(), pixels.rows());
     EXPECT_TRUE(indices.row(0).isApprox(Vector2i{0, 0}.transpose()));   // First index - heuristic
     EXPECT_TRUE(indices.row(11).isApprox(Vector2i{2, 3}.transpose()));  // Last index - heuristic
 }

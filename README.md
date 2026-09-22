@@ -107,6 +107,8 @@ Please add the following entry to your configuration file:
 
 ## Camera Models
 
+TODO(Jack): Replace this description with a link to the doxygen docs.
+
 The following camera models are supported:
 
 1) `double_sphere` - [f, cx, cy, xi, alpha]
@@ -123,6 +125,7 @@ We follow the intrinsic parameter conventions from this paper "The Double Sphere
 that for the "unified camera model" we use the Usenko Et al. proposed numerically stable formulation, and not the
 original formulation from "Single view point omnidirectional camera calibration from planar grids, Mei Et al. 2007". The
 conversion from one to the other is found in Usenko Et al. section 2.2.
+
 
 ## Tips, Tricks, and Warnings
 

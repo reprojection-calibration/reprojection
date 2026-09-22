@@ -9,8 +9,8 @@ namespace reprojection::feature_extraction {
 cv::Mat GenerateCheckerboard(cv::Size const& pattern_size, int const square_size_pixels) {
     // TODO(Jack): Which concept should the user be familiar with, the "internal rows/cols" or the checkerboards
     // rows/cols themselves?
-    int const rows{pattern_size.height + 1};
-    int const cols{pattern_size.width + 1};
+    int const rows{pattern_size.height};
+    int const cols{pattern_size.width};
 
     int const white_space_border{2 * square_size_pixels};  // White space around checkerboard aids extraction
     int const height{(square_size_pixels * rows) + white_space_border};

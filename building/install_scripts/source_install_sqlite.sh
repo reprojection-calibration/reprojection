@@ -16,9 +16,11 @@ source /temporary/building/install_scripts/source_install_utils.sh
 buildroot="/buildroot"
 
 name="sqlite-autoconf-3450100"
+sqlite_sha256="cd9c27841b7a5932c9897651e20b86c701dd740556989b01ca596fcfa3d49a0a"
 download_and_extract \
     "https://www.sqlite.org/2024/${name}.tar.gz" \
-    "${buildroot}"
+    "${buildroot}" \
+    ${sqlite_sha256}
 
 cd "${buildroot}/${name}"
 

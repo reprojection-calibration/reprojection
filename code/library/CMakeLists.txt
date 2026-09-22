@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
+
+if (NOT DEFINED REPROJECTION_VERSION)
+    set(REPROJECTION_VERSION "0.0.0")
+endif ()
+
 project(
         reprojection
-        VERSION 0.0.1
+        VERSION "${REPROJECTION_VERSION}"
         LANGUAGES C CXX
 )
 
@@ -24,6 +29,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(Ceres REQUIRED)
+
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -32,6 +38,22 @@ find_package(SQLite3 REQUIRED)
 find_package(apriltag REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
+
+if (BUILD_DOCS)
+    find_package(Doxygen REQUIRED)
+
+    set(DOXYGEN_ALWAYS_DETAILED_SEC YES) # Required to display the inline code when their is only a brief descriptor.
+    set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
+    set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
+    set(DOXYGEN_HTML_OUTPUT "${PROJECT_VERSION}")
+    set(DOXYGEN_OUTPUT_DIRECTORY "docs")
+    set(DOXYGEN_WARN_IF_UNDOCUMENTED "NO")
+
+    doxygen_add_docs(
+            docs
+            "${PROJECT_SOURCE_DIR}"
+    )
+endif ()
 
 include(CTest)
 if (BUILD_TESTING)
