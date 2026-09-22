@@ -17,13 +17,17 @@ namespace reprojection::config {
 // namespace which makes using it more verbose. It also has a dependency on the toml package which is then transiently
 // forces on anyone that needs the config, even if they just want the type and not the parsing.
 
+/** \brief Calibration configuration aggregate struct.
+ */
 struct Config {
     static Config Parse(toml::table const& table);
 
+    /** \brief Configuration of all non-algorithm and non-sensor parameters.
+     */
     struct Application {
         static Application Parse(toml::table const& table);
 
-        /*! \brief Stereo frame approximate time synchronization threshold.
+        /** \brief Stereo frame approximate time synchronization threshold.
          *
          * A timestamp within ±`approx_sync_delta_ns` is considered synchronized. The default value of 3ms is chosen to
          * represent about 10% of a 30Hz camera's image interval.
@@ -64,6 +68,8 @@ struct Config {
         int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
     };
 
+    /** \brief Configuration for each camera sensor.
+     */
     struct Camera {
         static Camera Parse(toml::table const& table, int index);
 
@@ -118,6 +124,8 @@ struct Config {
         std::string sensor_name;
     };
 
+    /** \brief Configuration of the imu sensor.
+     */
     struct Imu {
         static std::optional<Imu> Parse(toml::table const& table);
 
@@ -133,6 +141,8 @@ struct Config {
     };
 
     // TODO(Jack): This config type and the TargetInfo type are extremely similar, can we refactor to avoid duplication?
+    /** \brief Configuration of the calibration target.
+     */
     struct Target {
         static Target Parse(toml::table const& table);
 
