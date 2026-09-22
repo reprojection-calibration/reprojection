@@ -309,7 +309,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: docs-webpage
-          path: ${{ github.workspace }}/docs
+          path: ${{ runner.temp }}/docs
           if-no-files-found: error
 
   deploy-docs-webpage:
