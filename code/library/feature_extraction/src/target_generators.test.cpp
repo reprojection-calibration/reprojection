@@ -7,7 +7,7 @@
 using namespace reprojection::feature_extraction;
 
 TEST(TargetGenerators, TestGenerateCheckboard) {
-    cv::Size const pattern_size{4, 3};  // (width, height) == (cols, rows)
+    cv::Size const pattern_size{5, 4};  // (width, height) == (cols, rows)
     int const square_size_pixels{50};
     cv::Mat const checkerboard_image{GenerateCheckerboard(pattern_size, square_size_pixels)};
 

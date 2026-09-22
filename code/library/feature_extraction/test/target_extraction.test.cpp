@@ -15,7 +15,7 @@ using namespace std::string_view_literals;
 auto const empty_image{cv::Mat::zeros(cv::Size(100, 100), CV_8UC1)};
 
 TEST(FeatureExtractionTargetExtraction, TestCreateTargetExtractorCheckerboard) {
-    TargetInfo const target_info{TargetType::Checkerboard, 3, 4, 0.1, false};
+    TargetInfo const target_info{TargetType::Checkerboard, 4, 5, 0.1, false};
 
     std::unique_ptr<TargetExtractor> const extractor{CreateTargetExtractor(target_info)};
 
