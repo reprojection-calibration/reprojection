@@ -186,7 +186,7 @@ struct Config {
         double unit_dimension{1.0};
     };
 
-    /*! \brief The calibration application configuration/.
+    /*! \brief The calibration application configuration.
      *
      *  \par Config Status
      *  Optional.
