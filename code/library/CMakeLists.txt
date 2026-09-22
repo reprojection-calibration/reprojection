@@ -47,7 +47,7 @@ if(BUILD_DOCS)
     set(DOXYGEN_WARN_IF_UNDOCUMENTED "NO")
 
     doxygen_add_docs(
-            doc
+            docs
             "${PROJECT_SOURCE_DIR}"
     )
 endif ()

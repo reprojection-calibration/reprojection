@@ -257,6 +257,27 @@ FROM nginx:1.29.2 AS code-coverage-report-stage
 COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/html
 
 
+FROM base-stage AS docs-stage
+
+# WARN(Jack): Do not hard code/copy paste the docs build directory in multiple places!
+# TODO(Jack): We should only need the source code to build the docs! The fact that we also need the resources and the
+# calibration config shows that our cmake process is a little out of control.
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+    --mount=type=bind,source=code/resources,target=/temporary/code/resources \
+    --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
+    cmake -B "/buildroot/build-docs" -S "/temporary/code/library" \
+        -DBUILD_DOCS=ON; \
+    cmake --build "/buildroot/build-docs" --target docs
+
+
+FROM nginx:1.29.2 AS docs-report-stage
+
+# WARN(Jack): Hardcoding the doc version here seems hacky. If we just use this for local development it can work but I
+# would rather have something like a version env var.
+COPY --from=docs-stage  /buildroot/build-docs/docs/0.0.0  /usr/share/nginx/html
+
+
 FROM base-stage AS development-stage
 
 RUN apt-get update;  \
