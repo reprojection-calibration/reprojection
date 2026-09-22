@@ -289,19 +289,20 @@ jobs:
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: docs
+          load: true
+          tag: reprojection:docs-stage
           target: docs-stage
-      - name: Copy doxygen directory to host
+      - name: Copy Doxygen directory to host
         run: |
           set -eoux pipefail
           
-          docker run \
-            --mount "type=bind,source=${RUNNER_TEMP},target=/mount,readonly" \
-            --rm \
-            ubuntu:24.04 \
-              bash -c '
-                mkdir --parents ${RUNNER_TEMP}/docs
-                cp --debug /buildroot/build-docs/docs/0.0.0/* /mount/docs
-              '
+          mkdir --parents "${RUNNER_TEMP}/docs"
+      
+          container_id="$(docker create reprojection:docs-stage)"
+          docker cp \
+            "${container_id}:/buildroot/build-docs/docs/0.0.0/." \
+            "${RUNNER_TEMP}/docs/"
+          docker rm "${container_id}"
 
       - name: Upload docs webpage
         uses: actions/upload-artifact@v7
