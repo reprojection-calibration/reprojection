@@ -13,9 +13,15 @@ clone_repo() {
 download_and_extract() {
     local url=$1
     local dest=$2
+    local sha256=$3
 
-    wget --directory-prefix="$dest" "$url"
-    tar -xf "$dest/$(basename "$url")" -C "$dest"
+    wget --directory-prefix="${dest}" "${url}"
+    local file="${dest}/$(basename "${url}")"
+
+    # Check the downloaded sha256 against the known sha256.
+    echo "${sha256}  ${file}" | sha256sum --check --status
+
+    tar -xf "${file}" -C "${dest}"
 }
 
 # NOTE(Jack): We want control over when we build/install/test so we have three different functions. The only annoying

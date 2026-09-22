@@ -11,10 +11,9 @@ name="doxygen-${version}.linux.bin.tar.gz"
 buildroot="/buildroot"
 download_and_extract \
     "https://www.doxygen.nl/files/${name}" \
-    "${buildroot}"
+    "${buildroot}" \
+    "${sha256}"
 
 install \
   "${buildroot}/doxygen-${version}/bin/doxygen" \
   /usr/local/bin/doxygen
-
-echo "${sha256}  ${buildroot}/${name}" | sha256sum --check --status
