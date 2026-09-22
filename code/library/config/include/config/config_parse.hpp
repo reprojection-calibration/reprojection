@@ -152,7 +152,7 @@ struct Config {
          *  Optional.
          *
          *  \par Config Note
-         *  The 'circle_grid` target is the only target that supports the `asymmetric` configuration parameter. To
+         *  The `circle_grid` target is the only target that supports the `asymmetric` configuration parameter. To
          *  configure this please use the following syntax:
          *  \code{.toml}
          *  [target]
@@ -162,10 +162,17 @@ struct Config {
          */
         bool asymmetric{false};
 
+        // TODO(Jack): We should rename to make consistent "size" across all uses.
         /*! \brief The number rows and columns.
          *
          *  \par Config Status
          *  Required.
+         *
+         *  \par Config Note
+         *  Enter as an array named "pattern size" with the order [rows, cols].
+         *  \code{.toml}
+         *  pattern_size = [5,4]
+         *  \endcode
          */
         std::array<int, 2> size;
 
