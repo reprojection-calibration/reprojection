@@ -3,8 +3,6 @@
 #include <stdexcept>
 #include <string>
 
-// TODO(Jack): Is doxygen really so crazy that I need to add this to the top of the file for this to be generated at
-// all?
 /**
  * \file enums.hpp
  */
@@ -34,16 +32,19 @@ inline std::string ToString(Entity const entity_id) {
 
 /*! \brief Supported camera projection models.
  *
+ * For the `double_sphere`, `eucm`, and `ucm` camera models we use the notation from the paper "The Double Sphere Camera
+ * Model, Usenko Et al. 2018".
+ *
  *  \par Single focal length
  *  All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please see
  *  this excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity) from [Tangram
  *  Vision](https://www.tangramvision.com/) for an explanation.
  *
  *  \par Ucm formulation
- *  We follow the intrinsic parameter conventions from this paper "The Double Sphere Camera Model, Usenko Et al. 2018".
- *  Note that for the "unified camera model" we use the Usenko Et al. proposed numerically stable formulation, and not
- *  the original formulation from "Single view point omnidirectional camera calibration from planar grids, Mei Et al.
- *  2007". The conversion from one to the other is found in Usenko Et al. section 2.2.
+ *  Note that for the "unified camera model" we use the "The Double Sphere Camera Model, Usenko Et al. 2018" proposed
+ *  numerically stable formulation, and not the original formulation from "Single view point omnidirectional camera
+ *  calibration from planar grids, Mei Et al. 2007". The conversion from one to the other is found in Usenko Et al.
+ *  section 2.2.
  */
 enum class CameraModel {
     /// [f, cx, cy, xi, alpha]
@@ -70,12 +71,13 @@ inline std::string ToString(CameraModel const camera_model) {
     } else if (camera_model == CameraModel::Ucm) {
         return "ucm";
     } else {
-        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR -Unrecognized argument passed to ToString(CameraModel)");
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - ToString(CameraModel)");
     }
 }
 
-// TODO ADD SHOWINLINESOURCE! UPGRADE DOXYGEN TO DO SO
 /*! \brief Convert a human readable snake_case string into a \ref reprojection::CameraModel enum.
+ *
+ *  \showinlinesource
  *
  */
 inline CameraModel ToCameraModel(std::string_view camera_model) {
@@ -90,12 +92,10 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     } else if (camera_model == "ucm") {
         return CameraModel::Ucm;
     } else {
-        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToCameraModel(): " +
-                                 std::string(camera_model));
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - ToCameraModel(): " + std::string(camera_model));
     }
 }
 
-// TODO(Jack): Add a description of how to get the numbers of rows and columns and unit dimension for each target type!
 /*! \brief Supported calibration targets.
  *
  *  \par Unit Dimension Measurement
@@ -103,9 +103,6 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
  *  unit lengths.
  *
  *  \note Reprojection does not support the Kalibr style Aprilgrid, and instead uses the new and improved Aprilgrid3.
- *
- *  \warning Targets must preserve their original dimensions and aspect ratio and must not be stretched, skewed, warped,
- *  or bent.
  */
 enum class TargetType {
     /*! \par Unit Dimension
@@ -146,11 +143,12 @@ inline std::string ToString(TargetType const target_type) {
     }
 }
 
-// TODO ADD SHOWINLINESOURCE! UPGRADE DOXYGEN TO DO SO
 /*! \brief Convert a human readable snake_case string into a \ref reprojection::TargetType enum.
  *
+ *  \showinlinesource
+ *
  */
-inline TargetType ToTargetType(std::string const& enum_string) {
+inline TargetType ToTargetType(std::string_view enum_string) {
     if (enum_string == "checkerboard") {
         return TargetType::Checkerboard;
     } else if (enum_string == "circle_grid") {
@@ -158,8 +156,7 @@ inline TargetType ToTargetType(std::string const& enum_string) {
     } else if (enum_string == "aprilgrid3") {
         return TargetType::Aprilgrid3;
     } else {
-        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - Unrecognized argument passed to ToTargetType(): " +
-                                 enum_string);
+        throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - ToTargetType(): " + std::string(enum_string));
     }
 }
 
@@ -177,6 +174,7 @@ inline std::string ToString(CacheStatus const status) {
         throw std::runtime_error{"LIBRARY IMPLEMENTATION ERROR - ToString(CacheStatus)"};
     }
 }
+
 // LCOV_EXCL_STOP
 
 }  // namespace reprojection
