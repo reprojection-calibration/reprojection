@@ -71,7 +71,7 @@ TEST(ConfigParsingHelpers, TestRequireIndexedTables) {
 
         [example1]
     )"};
-    toml::table  table{toml::parse(table_content)};
+    toml::table table{toml::parse(table_content)};
 
     // Dummy example struct so we do not need to parse a real Config type.
     struct Example {
@@ -89,7 +89,6 @@ TEST(ConfigParsingHelpers, TestRequireIndexedTables) {
     EXPECT_EQ(result[0].index, 0);
     EXPECT_EQ(result[1].index, 1);
 
-
     // Tables indices must be continuous
     table.insert("example3", toml::table{});
     EXPECT_THROW(config::RequireIndexedTables<Example>(table, "example"), std::runtime_error);
@@ -103,7 +102,6 @@ TEST(ConfigParsingHelpers, TestRequireIndexedTables) {
 
     // Requires at least one parsed indexed table.
     EXPECT_THROW(config::RequireIndexedTables<Example>(table, "xyz"), std::runtime_error);
-
 }
 
 TEST(ConfigParsingHelpers, TestRejectUnexpectedKeys) {

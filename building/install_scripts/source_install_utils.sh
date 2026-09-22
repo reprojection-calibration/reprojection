@@ -16,7 +16,7 @@ download_and_extract() {
     local sha256=$3
 
     wget --directory-prefix="${dest}" "${url}"
-    local file="${dest}/$(basename "${url}")"
+    file="${dest}/$(basename "${url}")"
 
     # Check the downloaded sha256 against the known sha256.
     echo "${sha256}  ${file}" | sha256sum --check --status
