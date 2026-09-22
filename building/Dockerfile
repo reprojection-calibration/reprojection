@@ -75,6 +75,11 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
       /temporary/${SOURCE_INSTALL_SQLITE}
 
+ARG INSTALL_DOXYGEN=building/install_scripts/install_doxygen.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
+        /temporary/${INSTALL_DOXYGEN}
+
 
 FROM apt-base-stage AS base-stage
 
@@ -258,12 +263,6 @@ RUN apt-get update;  \
     apt-get install --no-install-recommends --yes  \
         gdb; \
     rm --force --recursive /var/lib/apt/lists/*
-
-ARG INSTALL_DOXYGEN=building/install_scripts/install_doxygen.sh
-
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
-        /temporary/${INSTALL_DOXYGEN}
 
 
 # TODO MOVE TO BASE INSTALL SCRIPT!!! \
