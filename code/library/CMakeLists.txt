@@ -24,6 +24,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(Ceres REQUIRED)
+find_package(Doxygen REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -32,6 +33,14 @@ find_package(SQLite3 REQUIRED)
 find_package(apriltag REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
+
+set(DOXYGEN_HTML_OUTPUT "${PROJECT_VERSION}")
+set(DOXYGEN_OUTPUT_DIRECTORY "docs")
+# set(DOXYGEN_INLINE_SOURCES YES)
+doxygen_add_docs(
+        doc                      # target name
+        "${PROJECT_SOURCE_DIR}"  # sources to scan for docs
+)
 
 include(CTest)
 if (BUILD_TESTING)
