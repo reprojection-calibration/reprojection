@@ -21,7 +21,7 @@ jobs:
   code-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: code-checks
@@ -30,7 +30,7 @@ jobs:
   code-checks-python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: code-checks-python
@@ -40,7 +40,7 @@ jobs:
     needs: code-checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: debug-build
@@ -50,7 +50,7 @@ jobs:
     needs: debug-build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: code-coverage-assertion
@@ -63,7 +63,7 @@ jobs:
     steps:
       # Objects stored with git-lfs need to be pulled, we follow the example at this link:
       # https://github.com/roim/docker-action-lfs/blob/main/.github/workflows/custom-context--working.yml
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: true
       - run: git lfs pull
@@ -77,7 +77,7 @@ jobs:
     needs: python-tooling
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: true
       - run: git lfs pull
@@ -103,7 +103,7 @@ jobs:
   test-data:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: true
       - run: git lfs pull
@@ -155,7 +155,7 @@ jobs:
     needs: [ debug-build, test-data ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: true
       - run: git lfs pull
@@ -188,7 +188,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # TODO(Jack): I do not think we need this git lfs pull step anymore.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           lfs: true
       - run: git lfs pull
@@ -280,3 +280,64 @@ jobs:
             external_cache_scope_1: video-file-integration-test
             monocular_config: true
             target: video-file-app-stage
+
+  build-docs-webpage:
+    needs: debug-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/docker-build
+        with:
+          cache_scope: docs
+          external_cache_scope: debug-build
+          load: true
+          tag: reprojection:docs-stage
+          target: docs-stage
+      - name: Copy Doxygen directory to host
+        run: |
+          set -eoux pipefail
+          
+          mkdir --parents "${RUNNER_TEMP}/docs"
+      
+          container_id="$(docker create reprojection:docs-stage)"
+          docker cp \
+            "${container_id}:/buildroot/build-docs/docs/0.0.0/." \
+            "${RUNNER_TEMP}/docs/"
+          docker rm "${container_id}"
+
+      - name: Upload docs webpage
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-webpage
+          path: ${{ runner.temp }}/docs
+          if-no-files-found: error
+
+  deploy-docs-webpage:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-docs-webpage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Download built webpage
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-webpage
+          path: ${{ runner.temp }}/website
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/website
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
