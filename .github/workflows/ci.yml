@@ -286,27 +286,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # TODO(Jack): This is copy and pasted from the kalibr stage! Is there not a better way to do this?
-      # TODO(Jack): Does the cache get shared across jobs? I think it does, regardless we need a more official way...
-      - name: Build the python tooling image
-        uses: ./.github/actions/docker-build
+      - uses: ./.github/actions/docker-build
         with:
-          cache_scope: python-tooling
-          context: .
-          load: true
-          tag: benchmarking:python-tooling-stage
-          target: python-tooling-stage
-      - name: Download parsed Kalibr results
-        uses: actions/download-artifact@v8
-        with:
-          name: parsed-kalibr-results
-          path: ${{ runner.temp }}/parsed_kalibr_results
-      - name: Download parsed Reprojection results
-        uses: actions/download-artifact@v8
-        with:
-          name: parsed-reprojection-results
-          path: ${{ runner.temp }}/parsed_reprojection_results
-      - name: Create results webpage
+          cache_scope: docs
+          target: docs-stage
+      - name: Copy doxygen directory to host
         run: |
           set -eoux pipefail
           
