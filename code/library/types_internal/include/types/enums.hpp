@@ -30,7 +30,7 @@ inline std::string ToString(Entity const entity_id) {
     }
 }
 
-/*! \brief Supported camera projection models.
+/** \brief Supported camera projection models.
  *
  * For the `double_sphere`, `eucm`, and `ucm` camera models we use the notation from the paper "The Double Sphere Camera
  * Model, Usenko Et al. 2018".
@@ -75,7 +75,7 @@ inline std::string ToString(CameraModel const camera_model) {
     }
 }
 
-/*! \brief Convert a human readable snake_case string into a \ref reprojection::CameraModel enum.
+/** \brief Convert a human readable snake_case string into a \ref reprojection::CameraModel enum.
  *
  *  \showinlinesource
  *
@@ -96,7 +96,7 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     }
 }
 
-/*! \brief Supported calibration targets.
+/** \brief Supported calibration targets.
  *
  *  \par Unit Dimension Measurement
  *  To mitigate measurement error measure the board's entire height/width and divide by the corresponding the number of
@@ -105,14 +105,14 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
  *  \note Reprojection does not support the Kalibr style Aprilgrid, and instead uses the new and improved Aprilgrid3.
  */
 enum class TargetType {
-    /*! \par Unit Dimension
+    /** \par Unit Dimension
      *  The side length of a single checkerboard square.
      *  \par Size
      *  The number of rows and columns as you would count normally. Note that the internal algorithm uses this value
      *  minus one because the feature extractor actually extracts the internal checkerboard corners.
      */
     Checkerboard,
-    /*! \par Unit Dimension
+    /** \par Unit Dimension
      *  The distance between the center's of two row/column adjacent circles. For asymmetric circle grids this cannot be
      *  measured directly.
      *  \par Size
@@ -121,7 +121,7 @@ enum class TargetType {
      *  not do this!
      */
     CircleGrid,
-    /*! \par Unit Dimension
+    /** \par Unit Dimension
      *  The length of a single square between the corner sharpening elements. If measuring the total internal target
      *  height/width (i.e. excluding the outer sharpening elements) make sure to account for the internal sharpening
      *  elements widths which are each 1/3 `unit_dimension` width.
@@ -143,7 +143,7 @@ inline std::string ToString(TargetType const target_type) {
     }
 }
 
-/*! \brief Convert a human readable snake_case string into a \ref reprojection::TargetType enum.
+/** \brief Convert a human readable snake_case string into a \ref reprojection::TargetType enum.
  *
  *  \showinlinesource
  *

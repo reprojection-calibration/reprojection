@@ -285,11 +285,6 @@ RUN apt-get update;  \
         gdb; \
     rm --force --recursive /var/lib/apt/lists/*
 
-
-# TODO MOVE TO BASE INSTALL SCRIPT!!! \
-    # https://superuser.com/questions/1312740/how-to-take-sha256sum-of-file-and-compare-to-check-in-one-line \
-#UN  echo "123123 ${buildroot}/${archive}"
-
 # TODO(Jack): I wish we could do something like 'pyenv set global ${BINDING_BUILD_VENV}' but I could not get that to
 # work.
 ENV PATH="${BINDING_BUILD_VENV}/bin:${PATH}"

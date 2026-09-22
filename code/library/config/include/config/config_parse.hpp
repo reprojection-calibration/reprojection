@@ -10,24 +10,22 @@
 
 namespace reprojection::config {
 
-// Doc format taken from https://www.doxygen.nl/manual/docblocks.html#cppblock
-
 // TODO(Jack): Make the actual config datatype independent of the parsing methods. It looks nice to have them together
 // like this, but I do not think it is required. One downside of the current setup is that this is found in the config::
 // namespace which makes using it more verbose. It also has a dependency on the toml package which is then transiently
 // forces on anyone that needs the config, even if they just want the type and not the parsing.
 
-/*! \brief Calibration configuration aggregate struct.
+/** \brief Calibration configuration aggregate struct.
  */
 struct Config {
     static Config Parse(toml::table const& table);
 
-    /*! \brief Configuration of all non-algorithm and non-sensor parameters.
+    /** \brief Configuration of all non-algorithm and non-sensor parameters.
      */
     struct Application {
         static Application Parse(toml::table const& table);
 
-        /*! \brief Stereo frame approximate time synchronization threshold.
+        /** \brief Stereo frame approximate time synchronization threshold.
          *
          * A timestamp within ±`approx_sync_delta_ns` is considered synchronized. The default value of 3ms is chosen to
          * represent about 10% of a 30Hz camera's image interval.
@@ -46,7 +44,7 @@ struct Config {
          */
         uint64_t approx_sync_delta_ns{3'000'000};
 
-        /*! \brief Visualize the target extraction step.
+        /** \brief Visualize the target extraction step.
          *
          *  \par Config Status
          *  Optional.
@@ -55,7 +53,7 @@ struct Config {
          */
         bool show_extraction{false};
 
-        /*! \brief Number of threads available.
+        /** \brief Number of threads available.
          *
          * Number of threads used to multithread the Ceres Solver calls. The default behavior automatically detects the
          * number of available threads and uses that value minus one.
@@ -68,12 +66,12 @@ struct Config {
         int threads{std::max(1, static_cast<int>(std::thread::hardware_concurrency()) - 1)};
     };
 
-    /*! \brief Configuration for each camera sensor.
+    /** \brief Configuration for each camera sensor.
      */
     struct Camera {
         static Camera Parse(toml::table const& table, int index);
 
-        /*! \brief The camera's selected projection model type.
+        /** \brief The camera's selected projection model type.
          *
          *  \par Config Status
          *  Required.
@@ -88,7 +86,7 @@ struct Config {
          */
         CameraModel camera_model;
 
-        /*! \brief Estimated focal length (in pixel).
+        /** \brief Estimated focal length (in pixel).
          *
          * Used to initialize the robust intrinsic initialization strategy. The actual focal length should be within one
          * half the provided `focal_length` parameter.
@@ -102,7 +100,7 @@ struct Config {
          */
         std::optional<double> focal_length{std::nullopt};
 
-        /*! \brief Configuration derived unique identifier.
+        /** \brief Configuration derived unique identifier.
          *
          *  \par Config Status
          *  Automatic.
@@ -113,7 +111,7 @@ struct Config {
          */
         int index;
 
-        /*! \brief Human readable identifier.
+        /** \brief Human readable identifier.
          *
          *  \par Config Status
          *  Required.
@@ -124,12 +122,12 @@ struct Config {
         std::string sensor_name;
     };
 
-    /*! \brief Configuration of the imu sensor.
+    /** \brief Configuration of the imu sensor.
      */
     struct Imu {
         static std::optional<Imu> Parse(toml::table const& table);
 
-        /*! \brief Human readable identifier.
+        /** \brief Human readable identifier.
          *
          *  \par Config Status
          *  Required.
@@ -141,12 +139,12 @@ struct Config {
     };
 
     // TODO(Jack): This config type and the TargetInfo type are extremely similar, can we refactor to avoid duplication?
-    /*! \brief Configuration of the calibration target.
+    /** \brief Configuration of the calibration target.
      */
     struct Target {
         static Target Parse(toml::table const& table);
 
-        /*! \brief Is the `circle_grid` target asymmetric.
+        /** \brief Is the `circle_grid` target asymmetric.
          *
          *  \par Config Status
          *  Optional.
@@ -163,7 +161,7 @@ struct Config {
         bool asymmetric{false};
 
         // TODO(Jack): We should rename to make consistent "size" across all uses.
-        /*! \brief The number rows and columns.
+        /** \brief The number rows and columns.
          *
          *  \par Config Status
          *  Required.
@@ -176,7 +174,7 @@ struct Config {
          */
         std::array<int, 2> size;
 
-        /*! \brief The target's type.
+        /** \brief The target's type.
          *
          *  \par Config Status
          *  Required.
@@ -191,7 +189,7 @@ struct Config {
          */
         TargetType target_type;
 
-        /*! \brief The target's metric scale parameter.
+        /** \brief The target's metric scale parameter.
          *
          *  \par Config Status
          *  Optional.
@@ -203,13 +201,13 @@ struct Config {
         double unit_dimension{1.0};
     };
 
-    /*! \brief The calibration application configuration.
+    /** \brief The calibration application configuration.
      *
      *  \par Config Status
      *  Optional.
      */
     Application application;
-    /*! \brief The camera sensor calibration configurations.
+    /** \brief The camera sensor calibration configurations.
      *
      * Every calibration workflow requires at least one configured camera, and each calibrated camera must have its own
      * unique configuration. The first camera (i.e. `cam0`) is taken as the reference camera whose coordinate frame
@@ -231,7 +229,7 @@ struct Config {
      *  \endcode
      */
     std::vector<Camera> cameras;
-    /*! \brief The imu sensor calibration configuration.
+    /** \brief The imu sensor calibration configuration.
      *
      * Providing an imu sensor configuration will configure the visual-inertial calibration workflow. Only one imu is
      * supported as of 21.09.2026.
@@ -240,7 +238,7 @@ struct Config {
      *  Optional.
      */
     std::optional<Imu> imu;
-    /*! \brief The calibration target configuration.
+    /** \brief The calibration target configuration.
      *
      *  \par Config Status
      *  Required.
