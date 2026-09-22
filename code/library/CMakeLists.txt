@@ -39,12 +39,12 @@ find_package(apriltag REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
-if(BUILD_DOCS)
+if (BUILD_DOCS)
     find_package(Doxygen REQUIRED)
 
+    set(DOXYGEN_ALWAYS_DETAILED_SEC YES) # Required to display the inline code when their is only a brief descriptor.
     set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
     set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
-    set(DOXYGEN_HIDE_UNDOC_NAMESPACES NO)
     set(DOXYGEN_HTML_OUTPUT "${PROJECT_VERSION}")
     set(DOXYGEN_OUTPUT_DIRECTORY "docs")
     set(DOXYGEN_WARN_IF_UNDOCUMENTED "NO")
