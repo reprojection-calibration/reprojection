@@ -5,14 +5,13 @@ with ROS1, ROS2, and OpenCV data formats.
 
 This application solves the following problems:
 
-1) **Intrinsic monocular camera calibration**
-2) **Camera-imu extrinsic calibration**
+1) **Monocular camera calibration**
+2) **Stereo camera calibration**
+3) **Visual-inertial calibration**
 
 The following features are planned and in progress:
 
-1) Stereo camera intrinsic-extrinsic calibration
-2) Stereo camera-imu extrinsic calibration
-3) Camera-imu temporal calibration
+1) Visual-inertial temporal calibration
 
 Anytime you have a question or comments please feel free to reach out to me
 on [GitHub](https://github.com/reprojection-calibration) or per [email](reprojection.calibration@gmail.com).
@@ -37,7 +36,7 @@ in-depth look into the calibration process you will also want to build the dashb
     ./building/local/build_image.sh --stage dashboard
 
 > [!NOTE]
-> The `video-file-app` only support camera intrinsic calibration. For camera-imu extrinsic calibration you need
+> The `video-file-app` only supports monocular camera calibration. For stereo or visual-inertial calibration you need
 > to use the ROS based applications.
 
 ## Run
