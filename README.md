@@ -5,14 +5,13 @@ with ROS1, ROS2, and OpenCV data formats.
 
 This application solves the following problems:
 
-1) **Intrinsic monocular camera calibration**
-2) **Camera-imu extrinsic calibration**
+1) **Monocular camera calibration**
+2) **Stereo camera calibration**
+3) **Visual-inertial calibration**
 
 The following features are planned and in progress:
 
-1) Stereo camera intrinsic-extrinsic calibration
-2) Stereo camera-imu extrinsic calibration
-3) Camera-imu temporal calibration
+1) Visual-inertial temporal calibration
 
 Anytime you have a question or comments please feel free to reach out to me
 on [GitHub](https://github.com/reprojection-calibration) or per [email](reprojection.calibration@gmail.com).
@@ -37,7 +36,7 @@ in-depth look into the calibration process you will also want to build the dashb
     ./building/local/build_image.sh --stage dashboard
 
 > [!NOTE]
-> The `video-file-app` only support camera intrinsic calibration. For camera-imu extrinsic calibration you need
+> The `video-file-app` only supports monocular camera calibration. For stereo or visual-inertial calibration you need
 > to use the ROS based applications.
 
 ## Run
@@ -72,60 +71,34 @@ Please use [calibration_config.toml](code/test_data/calibration_config.toml) as 
 file from. This file is used in all integration and smoke testing which mean it stays up to date. Please adapt this to
 your data and save it near your data.
 
-> [!WARNING]
-> If you only intend to intrinsically calibrate a camera remove the `[imu]` table from the calibration file. Unused or
-> invalid configuration keys are not permitted.
+Remove unused sensors from the calibration file. Unused or invalid configuration keys are not permitted.
 
 > [!IMPORTANT]
 > For the ROS applications the `sensor_name` must match the topic exactly.
 
-## Calibration target types
+### Configuration Documentation
 
-The following target types are supported:
+Please see the online [configuration documentation](https://reprojection-calibration.github.io/reprojection/structreprojection_1_1config_1_1Config.html)
+for an exhaustive list of all parameters and their meaning. Pay particular attention to the `Config Status` and `Config Note`
+fields if present. They will help you translate the configuration structure into the TOML config file.
 
-1) `aprilgrid3`
-    * [aprilgrid3 4x3](media/targets/aprilgrid3_4x3_v2.png)
-    * [aprilgrid3 5x4](media/targets/aprilgrid3_5x4_v2.png)
-    * [aprilgrid3 6x5](media/targets/aprilgrid3_6x5_v2.png)
-2) `checkerboard`
-3) `circle_grid` (symmetric or asymmetric)
+The following items are particularly relevant:
 
-To generate Checkerboard or Circle Grid targets
+* Supported [camera models](https://reprojection-calibration.github.io/reprojection/enums_8hpp.html#ac17721a449f03b50c739a2bc8e1766cf)
+* Supported [target types](https://reprojection-calibration.github.io/reprojection/enums_8hpp.html#a2a5a0a640731cb9ae91569a46ef6d949)
+
+## Aprilgrid3
+
+Reprojection introduced the new and improved Aprilgrid3 target type, and does not support the legacy Kalibr Aprilgrid.
+You can find Aprilgrid3 target files here
+
+* [aprilgrid3 4x3](media/targets/aprilgrid3_4x3_v2.png)
+* [aprilgrid3 5x4](media/targets/aprilgrid3_5x4_v2.png)
+* [aprilgrid3 6x5](media/targets/aprilgrid3_6x5_v2.png)
+
+If you would like to generate other target types (i.e. checkerboard or circle grid)
 the [target generator tool](https://calib.io/pages/camera-calibration-pattern-generator)
 provided by [calib.io](https://calib.io/) is a great choice.
-
-> [!WARNING]
-> Aprilgrid3 is NOT the same as the ubiquitous Aprilgrid used by Kalibr. Reprojection is not compatible with the Kalibr
-> style Aprilgrid.
-
-### Configuring asymmetric circle grid
-
-Please add the following entry to your configuration file:
-
-        [target.circle_grid]
-        asymmetric = true
-
-## Camera Models
-
-TODO(Jack): Replace this description with a link to the doxygen docs.
-
-The following camera models are supported:
-
-1) `double_sphere` - [f, cx, cy, xi, alpha]
-2) `eucm` - [x, cx, cy, alpha, beta] - "extended unified camera model"
-3) `pinhole` - [f, cx, cy]
-4) `pinhole_radtan4` - [f, cx, cy, k1, k2, p1, p2]
-5) `ucm` - [f cx, cy, alpha] - "unified camera model" - see note below on the Usenko Et al. reformulation.
-
-All camera models use a single focal length `f` instead of the standard two focal lengths `fx` and `fy`. Please see this
-excellent [article](https://www.tangramvision.com/blog/camera-modeling-focal-length-collinearity)
-from [Tangram Vision](https://www.tangramvision.com/) for an explanation.
-
-We follow the intrinsic parameter conventions from this paper "The Double Sphere Camera Model, Usenko Et al. 2018". Note
-that for the "unified camera model" we use the Usenko Et al. proposed numerically stable formulation, and not the
-original formulation from "Single view point omnidirectional camera calibration from planar grids, Mei Et al. 2007". The
-conversion from one to the other is found in Usenko Et al. section 2.2.
-
 
 ## Tips, Tricks, and Warnings
 
