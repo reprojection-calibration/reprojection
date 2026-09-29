@@ -20,17 +20,17 @@ std::vector<testing_utilities::CameraTestData> const camera_test_data{
          // hardcoded here!
          CameraInfo{CameraModel::DoubleSphere, {0, 512, 0, 512}},
          StepId{1},
-         "1d9f6211868fc970b94631f11f02a7110c4008f76a9246dffc86da5098d7b11d",
+         "bc0ccd67d52b1ccab91dcf7c06976983af6e14a6f637e19b50636dda1a9ede81",
          StepId{4},
-         "a9af3e877da0c5e5d457c51a4302f3e4c2c8891cf7d16a5f5f7c1e547d542e47",
+         "0454a740b42831804e23f8a36e6974766b4ce69edbb9f49ed934b87bf5598e97",
      },
      {
          // TODO(Jack): See above! Camera model should come from config!
          CameraInfo{CameraModel::DoubleSphere, {0, 512, 0, 512}},
          StepId{2},
-         "954f15331b067523ad1792e880ffc349841b1bf4254e18be44f918af3936ea34",
+         "d86c4051b9fb2d711072b40df9b4a5711ec63b394121c186ebae144ba7bf7908",
          StepId{5},
-         "7c26cad6b72aad7db09fa0b3bf0b09b1db7a1afa8e95de6a5551957b43486540",
+         "a0c7aee3daba97e42a590fcdc5cacb08a9e007f887efd3e416a479e5b471560f",
      }}};
 
 int main() {
