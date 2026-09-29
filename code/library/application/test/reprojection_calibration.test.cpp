@@ -61,8 +61,8 @@ TEST(ApplicationReprojectionCalibration, TestParseSensors) {
 
 // TODO(Jack): Copy and pasted from the steps test fixture in large part! We should move this to a common testing
 // utility and use it in both places.
-std::tuple<StepId, StepId, ImageSamples> InsertExtractedTargets(AssetId const camera_id, CameraInfo const& camera_info,
-                                                                Intrinsic const& intrinsic, SqlitePtr db) {
+std::tuple<StepId, ImageSamples> InsertExtractedTargets(AssetId const camera_id, CameraInfo const& camera_info,
+                                                        Intrinsic const& intrinsic, SqlitePtr db) {
     // WARN(Jack): If we add the imu data generation here make sure to use a common duration across both data generation
     // calls!
     auto const [targets, _]{testing_mocks::GenerateMvgData(camera_info, intrinsic, 11, 2)};
@@ -76,13 +76,12 @@ std::tuple<StepId, StepId, ImageSamples> InsertExtractedTargets(AssetId const ca
         }
         return images;
     }()};
-    auto const image_loading_id{database::GetOrCreateStep(db.get(), StepType::ImageLoading, "").first};
-    database::ImagesInsert(db.get(), image_loading_id, camera_id, images);
+    auto const step_id{database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, "").first};
+    database::ImagesInsert(db.get(), step_id, camera_id, images);
 
-    StepId const target_step_id{database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, "").first};
-    database::TargetsInsert(db.get(), target_step_id, image_loading_id, camera_id, targets);
+    database::TargetsInsert(db.get(), step_id, step_id, camera_id, targets);
 
-    return {image_loading_id, target_step_id, images};
+    return {step_id, images};
 }
 
 // TODO(Jack): There is a lot of logic here copied from the steps test fixture! The basic idea of what we are trying to
@@ -110,8 +109,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
             throw std::runtime_error{std::format("Camera model {} not found!", ToString(camera_info.camera_model))};
         }
 
-        auto const [images_id, targets_id,
-                    image_samples]{InsertExtractedTargets(camera.id, camera_info, intrinsic, db)};
+        auto const [targets_id, image_samples]{InsertExtractedTargets(camera.id, camera_info, intrinsic, db)};
 
         // WARN(Jack): If the camera info cache key calculation method changes then we will need to update this here
         // too (specifically the call to HashArguments())!
@@ -119,7 +117,6 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
         // to keep the code up to date and duplicates information. Can we centralize this?
         camera_test_data.push_back({
             camera_info,
-            images_id,
             hashing::HashArgs(camera.id.value, hashing::HashArgs(camera.config.sensor_name),
                               context.assets.target.config),
             targets_id,

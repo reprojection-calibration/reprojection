@@ -19,7 +19,6 @@ std::vector<testing_utilities::CameraTestData> const camera_test_data{
          // TODO(Jack): The camera model information here should come from the loaded and parsed config and NOT be
          // hardcoded here!
          CameraInfo{CameraModel::DoubleSphere, {0, 512, 0, 512}},
-         StepId{1},
          "bc0ccd67d52b1ccab91dcf7c06976983af6e14a6f637e19b50636dda1a9ede81",
          StepId{4},
          "0454a740b42831804e23f8a36e6974766b4ce69edbb9f49ed934b87bf5598e97",
@@ -27,7 +26,6 @@ std::vector<testing_utilities::CameraTestData> const camera_test_data{
      {
          // TODO(Jack): See above! Camera model should come from config!
          CameraInfo{CameraModel::DoubleSphere, {0, 512, 0, 512}},
-         StepId{2},
          "d86c4051b9fb2d711072b40df9b4a5711ec63b394121c186ebae144ba7bf7908",
          StepId{5},
          "a0c7aee3daba97e42a590fcdc5cacb08a9e007f887efd3e416a479e5b471560f",

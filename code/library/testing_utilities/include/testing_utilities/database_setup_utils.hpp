@@ -11,7 +11,6 @@ namespace reprojection::testing_utilities {
 // trigger a cache hit so you can run the calibration without the images.
 struct CameraTestData {
     CameraInfo camera_info;
-    StepId image_loading_id;
     Hash feature_extraction_key;
     StepId feature_extraction_id;
     Hash camera_info_key;

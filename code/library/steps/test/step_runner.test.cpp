@@ -5,7 +5,7 @@
 using namespace reprojection;
 
 struct ExampleStep {
-    static StepType Type() { return StepType::ImageLoading; }
+    static StepType Type() { return StepType::FeatureExtraction; }
 
     std::vector<AssetId> Assets() const { return {asset_id_}; }
 

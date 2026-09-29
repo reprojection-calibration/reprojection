@@ -47,7 +47,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
     StepId InsertImages(AssetId const camera_id, ImageSamples const& images) {
-        auto const step_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
+        auto const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
         database::ImagesInsert(db_.get(), step_id, camera_id, images);
 
         return step_id;
@@ -81,12 +81,11 @@ class StepTestFixture : public ::testing::Test {
             }
             return images;
         }()};
-        StepId const image_loading_id{InsertImages(camera.id, images)};
+        StepId const step_id{InsertImages(camera.id, images)};
 
-        StepId const target_step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
-        database::TargetsInsert(db_.get(), target_step_id, image_loading_id, camera.id, targets);
+        database::TargetsInsert(db_.get(), step_id, step_id, camera.id, targets);
 
-        return target_step_id;
+        return step_id;
     }
 
     StepId InsertIntrinsic(AssetId const camera_id) {
