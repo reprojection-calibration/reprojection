@@ -46,6 +46,7 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
 
     // TODO LOG HOW MANY SAMPLES HAVE BEEN RUN!
     TargetSamples extracted_targets;
+    ImageSamples imgs;
     while (auto const data{image_sampler_()}) {
         auto const& [timestamp_ns, img]{*data};
 
@@ -53,6 +54,8 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
         if (target.has_value()) {
             extracted_targets.insert({timestamp_ns, *target});  // LCOV_EXCL_LINE
         }
+
+        imgs.insert({timestamp_ns, {}});
 
         // LCOV_EXCL_START
         if (show_extraction_) {
@@ -81,16 +84,9 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
     // Because we construct the image samples here with an empty buffer the sqlite table will just get a null entry.
     // TODO(Jack): Do we just need to completely refactor to replace the role in the FK tree that images play with
     // the extracted targets?
-    ImageSamples const imgs{[&extracted_targets] {
-        ImageSamples data;
-        for (auto const& timestamp_ns : extracted_targets | std::views::keys) {
-            data.insert({timestamp_ns, {}});
-        }
-        return data;
-    }()};
     database::ImagesInsert(db.get(), step_id, camera_id_, imgs);
 
-    // WARN(Jack): Originall the targets had a FK relationship on a seperate now non-existent image loading step
+    // WARN(Jack): Originally the targets had a FK relationship on a seperate now non-existent image loading step
     // which is why we now pass the source_step_id as our current step instead of the image loading step id which no
     // longer exists.
     // TODO(Jack): Can we remove the FK dep on the image loading step considering now that the feature extraction
