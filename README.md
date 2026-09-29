@@ -1,7 +1,8 @@
 # The future is calibrated!
 
 This is an application for target-based sensor calibration. It is completely dockerized and automatically compatible
-with ROS1, ROS2, and OpenCV data formats.
+with ROS1, ROS2, and OpenCV data formats. Check out the project on YouTube
+[@ReprojectionLabs](https://www.youtube.com/@ReprojectionLabs) for useful tutorials.
 
 This application solves the following problems:
 
@@ -12,6 +13,7 @@ This application solves the following problems:
 The following features are planned and in progress:
 
 1) Visual-inertial temporal calibration
+2) Rolling shutter calibration
 
 Anytime you have a question or comments please feel free to reach out to me
 on [GitHub](https://github.com/reprojection-calibration) or per [email](reprojection.calibration@gmail.com).
