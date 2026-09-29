@@ -115,12 +115,16 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
 
         // WARN(Jack): If the camera info cache key calculation method changes then we will need to update this here
         // too (specifically the call to HashArguments())!
+        // TODO(Jack): We hash the sensor name here twice and again in the TestDatabaseImageInputs(). This makes it hard
+        // to keep the code up to date and duplicates information. Can we centralize this?
         camera_test_data.push_back({
             camera_info,
             images_id,
-            hashing::HashArgs(camera.id.value, false, context.assets.target.config, image_samples),
+            hashing::HashArgs(camera.id.value, hashing::HashArgs(camera.config.sensor_name),
+                              context.assets.target.config),
             targets_id,
-            hashing::HashArgs(camera.id.value, hashing::HashArgs(camera.config.sensor_name), camera.config.camera_model),
+            hashing::HashArgs(camera.id.value, hashing::HashArgs(camera.config.sensor_name),
+                              camera.config.camera_model),
         });
     }
 

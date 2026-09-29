@@ -1,5 +1,7 @@
 #include "steps/feature_extraction.hpp"
 
+#include <ranges>
+
 #include "database/calib_db.hpp"
 #include "feature_extraction/target_extraction.hpp"
 #include "hashing/hashing.hpp"
@@ -17,24 +19,23 @@ auto const log{logging::Get("steps")};
 
 }
 
-FeatureExtraction::FeatureExtraction(AssetId const camera_id, StepId const image_loading_id, bool const show_extraction,
+FeatureExtraction::FeatureExtraction(AssetId const camera_id, std::string_view serialized_image_sampler,
+                                     ImageSampler const& image_sampler, bool const show_extraction,
                                      StepId const target_info_id, AssetId const target_id, SqlitePtr const db)
     : camera_id_{camera_id},
-      image_loading_id_{image_loading_id},
+      image_sampler_hash_{hashing::HashArgs(serialized_image_sampler)},
+      image_sampler_{image_sampler},
       show_extraction_{show_extraction},
-      images_{std::make_shared<ImageSamples>(database::ImagesSelect(db.get(), image_loading_id, camera_id))},
       target_info_{ValueOrExit(database::TargetInfoSelect(db.get(), target_info_id, target_id), log)} {}
 
 Hash FeatureExtraction::CacheKey() const {
-    // TODO(Jack): The flag show_extraction should not be part of the cache! Just cause that changes does not mean we
-    // need to rextract all the features.
     // TODO(Jack): We should not strictly need the camera_id_ here as part of they key because the target info and
     // images_ should uniquely identify the feature extraction. However a problem arises when we have artifically
     // triggered cache hits (for example in the benchmark testing) Where the images_ are empty and that causes the
     // cache key to no longer be unique across different cameras. To prevent this we added the asset id. If this is
     // really a good way to solve this is unclear. The problem I see is that the asset id is not some universal
     // "forever" identifier, and therefore its use here seems like it might causes problems down the line.
-    return hashing::HashArgs(camera_id_.value, show_extraction_, target_info_, *images_);
+    return hashing::HashArgs(camera_id_.value, image_sampler_hash_.value, target_info_);
 }
 
 // TODO(Jack): We really need to split the visualization logic from the core computation!
@@ -43,15 +44,10 @@ Hash FeatureExtraction::CacheKey() const {
 void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const {
     auto const extractor{feature_extraction::CreateTargetExtractor(target_info_)};
 
+    // TODO LOG HOW MANY SAMPLES HAVE BEEN RUN!
     TargetSamples extracted_targets;
-    for (auto const& [timestamp_ns, buffer] : *images_) {
-        cv::Mat const img{cv::imdecode(buffer.data, cv::IMREAD_UNCHANGED)};
-        if (img.empty()) {
-            // LCOV_EXCL_START
-            log->error("{{{}, 'msg': 'Attempted to decode image but result was empty.'}}",
-                       StepLogInfo{Type(), step_id, camera_id_});
-            // LCOV_EXCL_STOP
-        }
+    while (auto const data{image_sampler_()}) {
+        auto const& [timestamp_ns, img]{*data};
 
         std::optional const target{extractor->Extract(img)};
         if (target.has_value()) {
@@ -79,9 +75,27 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
             }
         }
         // LCOV_EXCL_STOP
-    }
 
-    database::TargetsInsert(db.get(), step_id, image_loading_id_, camera_id_, extracted_targets);
+        // TODO(Jack): Given the current foreign key constraints we need to insert the images into the image table here.
+        // Because we construct the image samples here with an empty buffer the sqlite table will just get a null entry.
+        // TODO(Jack): Do we just need to completely refactor to replace the role in the FK tree that images play with
+        // the extracted targets?
+        ImageSamples const imgs{[&extracted_targets] {
+            ImageSamples data;
+            for (auto const& timestamp_ns : extracted_targets | std::views::keys) {
+                data.insert({timestamp_ns, {}});
+            }
+            return data;
+        }()};
+        database::ImagesInsert(db.get(), step_id, camera_id_, imgs);
+
+        // WARN(Jack): Originall the targets had a FK relationship on a seperate now non-existent image loading step
+        // which is why we now pass the source_step_id as our current step instead of the image loading step id which no
+        // longer exists.
+        // TODO(Jack): Can we remove the FK dep on the image loading step considering now that the feature extraction
+        // step is also what delineates the loaded images?
+        database::TargetsInsert(db.get(), step_id, step_id, camera_id_, extracted_targets);
+    }
 }
 
 }  // namespace reprojection::steps

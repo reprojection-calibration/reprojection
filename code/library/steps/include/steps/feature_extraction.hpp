@@ -7,8 +7,8 @@
 namespace reprojection::steps {
 
 struct FeatureExtraction {
-    FeatureExtraction(AssetId camera_id, StepId image_loading_id, bool show_extraction, StepId target_info_id,
-                      AssetId target_id, SqlitePtr db);
+    FeatureExtraction(AssetId camera_id, std::string_view serialized_image_sampler, ImageSampler const& image_sampler,
+                      bool show_extraction, StepId target_info_id, AssetId target_id, SqlitePtr db);
 
     static StepType Type() { return StepType::FeatureExtraction; }
 
@@ -22,9 +22,9 @@ struct FeatureExtraction {
 
    private:
     AssetId camera_id_;
-    StepId image_loading_id_;
+    Hash image_sampler_hash_;
+    ImageSampler image_sampler_;
     bool show_extraction_;
-    std::shared_ptr<ImageSamples> images_;
     TargetInfo target_info_;
 };
 
