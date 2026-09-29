@@ -220,7 +220,7 @@ class StepTestFixture : public ::testing::Test {
     TimingParameters timing_{};
 };
 
-class ImageLoadingFixture : public StepTestFixture {
+class ImageSamplerFixture : public StepTestFixture {
    protected:
     void SetUp() override {
         StepTestFixture::SetUp();

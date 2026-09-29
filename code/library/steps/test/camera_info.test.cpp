@@ -8,7 +8,7 @@
 
 using namespace reprojection;
 
-TEST_F(ImageLoadingFixture, TestCameraInfoStepRunner) {
+TEST_F(ImageSamplerFixture, TestCameraInfoStepRunner) {
     steps::CameraInfoStep const step{camera_id_, "", image_sampler_, CameraModel::DoubleSphere};
     StepId const step_id{RunStep<steps::CameraInfoStep>(context_.workflow_id, step, db_)};
 
@@ -21,7 +21,7 @@ TEST_F(ImageLoadingFixture, TestCameraInfoStepRunner) {
     EXPECT_EQ(result->bounds.v_min, 0);
 }
 
-TEST_F(ImageLoadingFixture, TestCameraInfoStep) {
+TEST_F(ImageSamplerFixture, TestCameraInfoStep) {
     // Build the step and check that the type and hash function are correct.
     steps::CameraInfoStep const step{camera_id_, "", image_sampler_, CameraModel::DoubleSphere};
     EXPECT_EQ(step.Type(), StepType::CameraInfo);

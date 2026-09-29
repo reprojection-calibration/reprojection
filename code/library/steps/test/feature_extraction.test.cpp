@@ -9,10 +9,10 @@
 using namespace reprojection;
 
 // TODO(Jack): We are now two levels of test fixture inheritance deep! Be careful and tread lightly :)
-class FeatureExtractionTestFixture : public ImageLoadingFixture {
+class FeatureExtractionTestFixture : public ImageSamplerFixture {
    protected:
     void SetUp() override {
-        ImageLoadingFixture::SetUp();
+        ImageSamplerFixture::SetUp();
 
         target_id_ = context_.assets.target.id;
         target_info_id_ = InsertTargetInfo();
