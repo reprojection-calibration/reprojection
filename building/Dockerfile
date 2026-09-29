@@ -368,11 +368,11 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       --db-path /data/ros1/dataset-calib-imu4_512_16.calib.db3 \
       --step-ids 4 5  \
-      --cache-keys a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842; \
+      --cache-keys e39ca580dbfca6f32ca9f36562cbe27e64e81c9252caf39c0ce0dbe0b61e7d83 28ff78dccc2b56843faed8444a112184501d81febb5a1bac13869571bf4cc2f7; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       --db-path /data/ros2/dataset-calib-imu4_512_16.calib.db3  \
       --step-ids 4 5 \
-      --cache-keys a9916b5aa0f6943d56c84de84040673482128e4960f5419465835b78f091975d b0bf752366fb86b14270aac9bf1b531d744d5249f2dee4c48326ca3724b9b842; \
+      --cache-keys 0a8326fd649ccd4588b43e61d26320ebc813e675f690fbf54e94182a9fddbc78 4904e2fb29dd5d77fd5ed142f702e4664dcc280b95504d3fbb5e87354765a22f; \
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       --db-path /data/video_file/dataset-calib-imu4_512_16.calib.db3  \
       --step-ids 4  \
