@@ -376,7 +376,7 @@ RUN --mount=type=bind,source=${UPDATE_FEATURE_EXTRACTION_CACHE},target=/temporar
     python3 /temporary/${UPDATE_FEATURE_EXTRACTION_CACHE}  \
       --db-path /data/video_file/dataset-calib-imu4_512_16.calib.db3  \
       --step-ids 4  \
-      --cache-keys 422e7fddf519b1bf04a1140d44c604cc1c1d07927ad0610e610a2671a8fcec72
+      --cache-keys 107630aef3e1bd636903eb4893c954dcbc7d53c71fc92b2b1192eb91192d2149
 
 # NOTE(Jack): We remove the imu data table because we can actually load that data from the ROS bags during the test. By
 # removing it and then letting the app reload it it removes one additional cache key we need to keep track of and write
