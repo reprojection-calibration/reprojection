@@ -50,23 +50,23 @@ def construct_test_db(db_path):
     )
 
     # Add two example steps to the database.
-    image_loading_id = execute_sql(
-        db_path, load_sql("steps_insert.sql"), ("image_loading", "")
+    feat_ex_id = execute_sql(
+        db_path, load_sql("steps_insert.sql"), ("feature_extraction", "")
     )
     imu_data_loading_id = execute_sql(
         db_path, load_sql("steps_insert.sql"), ("imu_data_loading", "")
     )
 
-    # Add the steps to the workflows - note the image_loading belongs to both workflows.
+    # Add the steps to the workflows - note the feature_extraction belongs to both workflows.
     execute_sql(
         db_path,
         load_sql("workflow_steps_upsert.sql"),
-        (cam_workflow_id, image_loading_id, "image_loading", ""),
+        (cam_workflow_id, feat_ex_id, "feature_extraction", ""),
     )
     execute_sql(
         db_path,
         load_sql("workflow_steps_upsert.sql"),
-        (cam_imu_workflow_id, image_loading_id, "image_loading", ""),
+        (cam_imu_workflow_id, feat_ex_id, "feature_extraction", ""),
     )
     execute_sql(
         db_path,
@@ -80,7 +80,7 @@ def construct_test_db(db_path):
 
     # Add one piece of data into each table.
     execute_sql(
-        db_path, load_sql("images_insert.sql"), (image_loading_id, camera_id, 0, None)
+        db_path, load_sql("images_insert.sql"), (feat_ex_id, camera_id, 0, None)
     )
     execute_sql(
         db_path,
@@ -143,8 +143,6 @@ def construct_visualization_db(db_path):
             ],
         )
         steps = [
-            (10, "image_loading", "1|"),
-            (11, "image_loading", "2|"),
             (20, "feature_extraction", "1|"),
             (21, "feature_extraction", "2|"),
             (30, "bundle_adjustment", "1|"),
@@ -163,7 +161,7 @@ def construct_visualization_db(db_path):
                 "INSERT INTO workflow_steps VALUES (?, ?, ?, ?)",
                 (1, step_id, step_type, signature),
             )
-        for step_id in (11, 21, 31, 41):
+        for step_id in (21, 31, 41):
             _, step_type, signature = next(step for step in steps if step[0] == step_id)
             conn.execute(
                 "INSERT INTO workflow_steps VALUES (?, ?, ?, ?)",
@@ -195,13 +193,13 @@ def construct_visualization_db(db_path):
             for timestamp in (1700000000000000001, 1700000000000000002):
                 conn.execute(
                     "INSERT INTO images VALUES (?, ?, ?, NULL)",
-                    (9 + asset_id, asset_id, timestamp),
+                    (19 + asset_id, asset_id, timestamp),
                 )
                 conn.execute(
                     "INSERT INTO extracted_targets VALUES (?, ?, ?, ?, ?)",
                     (
                         19 + asset_id,
-                        9 + asset_id,
+                        19 + asset_id,
                         asset_id,
                         timestamp,
                         target.SerializeToString(),

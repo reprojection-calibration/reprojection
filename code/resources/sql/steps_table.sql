@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS steps
     type       TEXT     NOT NULL CHECK ( type IN ('bundle_adjustment',
                                                   'camera_info',
                                                   'feature_extraction',
-                                                  'image_loading',
                                                   'imu_data_loading',
                                                   'intrinsic_init',
                                                   'pose_init',

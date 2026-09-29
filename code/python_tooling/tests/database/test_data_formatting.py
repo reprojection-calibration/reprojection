@@ -30,7 +30,7 @@ class TestDataFormatting(unittest.TestCase):
             "cam",
             "cam_signature",
             {1: {"id": 1, "type": "camera", "index": 0, "name": ""}},
-            {1: {"type": "image_loading", "asset_group_signature": ""}},
+            {1: {"type": "feature_extraction", "asset_group_signature": ""}},
         )
         workflow_assert(
             workflows[1],
@@ -42,7 +42,7 @@ class TestDataFormatting(unittest.TestCase):
                 2: {"id": 2, "type": "imu", "index": 0, "name": ""},
             },
             {
-                1: {"type": "image_loading", "asset_group_signature": ""},
+                1: {"type": "feature_extraction", "asset_group_signature": ""},
                 2: {"type": "imu_data_loading", "asset_group_signature": ""},
             },
         )
@@ -66,13 +66,13 @@ class TestDataFormatting(unittest.TestCase):
                     {
                         "workflow_id": 1,
                         "step_id": 10,
-                        "type": "image_loading",
+                        "type": "feature_extraction",
                         "asset_group_signature": "1|",
                     },
                     {
                         "workflow_id": 1,
                         "step_id": 11,
-                        "type": "image_loading",
+                        "type": "feature_extraction",
                         "asset_group_signature": "2|",
                     },
                 ]
@@ -84,7 +84,7 @@ class TestDataFormatting(unittest.TestCase):
             [asset["name"] for asset in workflow.assets_of_type("camera")],
             ["cam0", "cam1"],
         )
-        self.assertEqual(workflow.step_ids("image_loading"), [10, 11])
+        self.assertEqual(workflow.step_ids("feature_extraction"), [10, 11])
 
     def test_process_workflow(self):
         with NamedTemporaryFile(suffix=".db3") as tmp:
