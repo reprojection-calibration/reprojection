@@ -4,7 +4,6 @@ set(SRC_FILES
         src/bundle_adjustment.cpp
         src/camera_info.cpp
         src/feature_extraction.cpp
-        src/image_loading.cpp
         src/imu_data_loading.cpp
         src/initialize_workflow.cpp
         src/intrinsic_init.cpp
@@ -42,7 +41,6 @@ set(TESTS
         test/bundle_adjustment.test.cpp
         test/camera_info.test.cpp
         test/feature_extraction.test.cpp
-        test/image_loading.test.cpp
         test/imu_data_loading.test.cpp
         test/initialize_workflow.test.cpp
         test/intrinsic_init.test.cpp

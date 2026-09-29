@@ -7,7 +7,6 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
-#include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "steps/intrinsic_init.hpp"
