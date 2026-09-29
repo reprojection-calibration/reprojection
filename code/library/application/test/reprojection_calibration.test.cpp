@@ -120,7 +120,7 @@ TEST(ApplicationReprojectionCalibration, TestCalibrate) {
             images_id,
             hashing::HashArgs(camera.id.value, false, context.assets.target.config, image_samples),
             targets_id,
-            hashing::HashArgs(camera.id.value, camera.config.camera_model, image_samples),
+            hashing::HashArgs(camera.id.value, hashing::HashArgs(camera.config.sensor_name), camera.config.camera_model),
         });
     }
 

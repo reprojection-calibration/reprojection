@@ -7,7 +7,8 @@
 namespace reprojection::steps {
 
 struct CameraInfoStep {
-    CameraInfoStep(AssetId camera_id, StepId image_loading_id, CameraModel camera_model, SqlitePtr db);
+    CameraInfoStep(AssetId camera_id, std::string_view serialized_image_sampler, ImageSampler const& image_sampler,
+                   CameraModel camera_model);
 
     static StepType Type() { return StepType::CameraInfo; }
 
@@ -19,11 +20,9 @@ struct CameraInfoStep {
 
    private:
     AssetId camera_id_;
+    Hash image_sampler_hash_;
+    ImageSampler image_sampler_;
     CameraModel camera_model_;
-    // TODO(Jack): It is way overkill to load all the images here just to get the size of the first one. We need a
-    // better iamge handling pipeline across the image loading/feature extraction/camera info. We need an entirely new
-    // concept.
-    std::shared_ptr<ImageSamples> images_;
 };
 
 }  // namespace reprojection::steps

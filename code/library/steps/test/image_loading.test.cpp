@@ -10,29 +10,7 @@
 
 using namespace reprojection;
 
-class ImageLoadingFixture : public StepTestFixture {
-   protected:
-    void SetUp() override {
-        StepTestFixture::SetUp();
 
-        camera_id_ = context_.assets.cameras.front().id;
-        encoded_images_ = TestImageSamples();
-        image_sampler_ = [itr = std::cbegin(encoded_images_),
-                          end = std::cend(encoded_images_)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
-            if (itr != end) {
-                auto const& [timestamp_ns, buffer_i]{*itr};
-                cv::Mat const img_i{cv::imdecode(buffer_i.data, cv::IMREAD_GRAYSCALE)};
-                itr = std::next(itr);
-                return std::pair{timestamp_ns, img_i};
-            }
-            return std::nullopt;
-        };
-    }
-
-    AssetId camera_id_;
-    ImageSamples encoded_images_;
-    ImageSampler image_sampler_;
-};
 
 TEST_F(ImageLoadingFixture, TestImageLoadingStepRunner) {
     steps::ImageLoading const step{camera_id_, "", image_sampler_};

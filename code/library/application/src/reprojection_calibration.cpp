@@ -107,7 +107,8 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
         steps::ImageLoading const image_loading{camera.id, image_input.signature, image_input.source};
         StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading, db)};
 
-        steps::CameraInfoStep const camera_info{camera.id, image_loading_id, camera.config.camera_model, db};
+        steps::CameraInfoStep const camera_info{camera.id, image_input.signature, image_input.source,
+                                                camera.config.camera_model};
         StepId const camera_info_id{RunStep<steps::CameraInfoStep>(context.workflow_id, camera_info, db)};
 
         steps::FeatureExtraction const feature_extraction{
