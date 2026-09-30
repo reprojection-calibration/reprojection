@@ -46,6 +46,7 @@ set(SQL_FILES
         spline_info_insert.sql
         spline_info_select.sql
         spline_info_table.sql
+        steps_delete.sql
         steps_delete_trigger.sql
         steps_insert.sql
         steps_select.sql

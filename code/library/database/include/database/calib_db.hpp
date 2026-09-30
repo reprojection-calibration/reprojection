@@ -117,6 +117,8 @@ void SplineInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, spline::Tim
 
 std::expected<spline::TimeHandler, std::string> SplineInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
+void StepDelete(sqlite3* db, StepId step_id);
+
 void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
 std::expected<TargetInfo, std::string> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
