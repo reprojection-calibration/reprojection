@@ -80,9 +80,9 @@ Remove unused sensors from the calibration file. Unused or invalid configuration
 
 ### Configuration Documentation
 
-Please see the online [configuration documentation](https://reprojection-calibration.github.io/reprojection/structreprojection_1_1config_1_1Config.html)
-for an exhaustive list of all parameters and their meaning. Pay particular attention to the `Config Status` and `Config Note`
-fields if present. They will help you translate the configuration structure into the TOML config file.
+Please see the online [config docs](https://reprojection-calibration.github.io/reprojection/structreprojection_1_1config_1_1Config.html)
+for an exhaustive list of all parameters and their meaning. The `Config Status` and `Config Note` fields will help you
+translate the configuration structure into the TOML config file.
 
 The following items are particularly relevant:
 
