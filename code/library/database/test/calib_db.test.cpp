@@ -389,6 +389,25 @@ TEST(DatabaseCalibDb, TestSplineInfo) {
     EXPECT_EQ(result.error(), "{'database::': 'SplineInfoSelect', 'step_id': 1, 'asset_id': -1}");
 }
 
+TEST(DatabaseCalibDb, TestStepDelete) {
+    auto db{database::OpenCalibDb(":memory:", true)};
+
+    // Make a step.
+    auto step{database::GetOrCreateStep(db.get(), StepType::TargetInfo, "")};
+    database::StepCacheKeyUpdate(db.get(), step.first, "");
+
+    // Just make sure that the step is written and we get a cache hit.
+    step = database::GetOrCreateStep(db.get(), StepType::TargetInfo, "");
+    EXPECT_EQ(step.second, CacheStatus::CacheHit);
+
+    // Delete the step.
+    database::StepDelete(db.get(), step.first);
+
+    // Now we get a cache miss because the step had been deleted :)
+    step = database::GetOrCreateStep(db.get(), StepType::TargetInfo, "");
+    EXPECT_EQ(step.second, CacheStatus::CacheMiss);
+}
+
 TEST(DatabaseCalibDb, TestTargetInfo) {
     auto db{database::OpenCalibDb(":memory:", true)};
 
