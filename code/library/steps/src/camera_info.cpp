@@ -36,16 +36,9 @@ void CameraInfoStep::Execute(StepId const step_id, SqlitePtr const db) const {
     }
 
     auto const& [timestamp_ns, img]{*sample};
-    if (img.empty()) {
-        // LCOV_EXCL_START
-        log->error("{{{}, 'msg': 'Image at timestamp {} was empty.'}}", StepLogInfo{Type(), step_id, camera_id_},
-                   ToString(camera_model_), timestamp_ns);
-        std::exit(1);
-        // LCOV_EXCL_STOP
-    }
-
     CameraInfo const camera_info{camera_model_,
                                  {0, static_cast<double>(img.size().width), 0, static_cast<double>(img.size().height)}};
+
     database::CameraInfoInsert(db.get(), step_id, camera_id_, camera_info);
 
     log->info("{{{}, 'camera_info': {{'camera_model': {}, 'height': {}, 'width': {}}}}}",
