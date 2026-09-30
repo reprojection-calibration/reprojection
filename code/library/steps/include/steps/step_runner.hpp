@@ -37,10 +37,18 @@ StepId RunStep(WorkflowId const workflow_id, T const& step, SqlitePtr const db) 
         return step_id;
     }
 
-    // TODO(Jack): Put this inside a database transaction so in case of failure everything rolls back!
-    // TODO(Jack): Not just rollback, but if this throw then we get left with a step with a null cache key, how to
-    // solve!?
-    step.Execute(step_id, db);
+    // NOTE(Jack): This is almost the only place in the entire code base where we use exceptions for actual control
+    // flow. If the step fails during execution then delete it from the steps table, and the FK relationships should
+    // remove the entire record of the step from the database.
+    try {
+        step.Execute(step_id, db);
+    } catch (std::exception const& e) {
+        database::StepDelete(db.get(), step_id);
+
+        log->error("{{{}, 'msg': {}}}", StepLogInfo{step.Type(), step_id}, std::string{e.what()});
+        throw;
+    }
+
     database::StepCacheKeyUpdate(db.get(), step_id, cache_key);
 
     return step_id;

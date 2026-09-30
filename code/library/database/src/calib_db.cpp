@@ -614,6 +614,12 @@ std::expected<spline::TimeHandler, std::string> SplineInfoSelect(sqlite3* const 
     }
 }
 
+void StepDelete(sqlite3* const db, StepId const step_id) {
+    auto const binder{[step_id](sqlite3_stmt* const stmt) { Bind(stmt, 1, step_id.value); }};
+
+    ExecuteStatement(sql_statements::steps_delete, binder, db);
+}
+
 void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, TargetInfo const& target_info) {
     auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
