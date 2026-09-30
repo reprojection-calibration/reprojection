@@ -17,7 +17,6 @@ STAGES = (
         "Individual cameras",
         "Calibrate each camera independently: extract targets, initialize intrinsics and poses, then refine with bundle adjustment.",
         (
-            "image_loading",
             "camera_info",
             "feature_extraction",
             "intrinsic_init",

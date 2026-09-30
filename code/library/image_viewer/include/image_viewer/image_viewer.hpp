@@ -17,7 +17,7 @@ namespace reprojection::image_viewer {
 class ImageViewer {
    public:
     explicit ImageViewer(std::unique_ptr<GuiInterface> gui_interface, std::unique_ptr<KeyboardInput> keyboard_input,
-                         int const delay_ms = 10);
+                         int delay_ms = 1);
 
     // NOTE(Jack): The cv::Mat is essentially a smart pointer with a reference counter - therefore we pass it here by
     // value so that the reference counter and not const& so the reference counter gets incremented and the memory will

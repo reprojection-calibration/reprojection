@@ -14,7 +14,6 @@ set(INCLUDE_DIRECTORIES
 set(PRIVATE_LINK_LIBRARIES
         apriltag::apriltag
         eigen_utilities
-        logging
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES

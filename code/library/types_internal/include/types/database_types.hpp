@@ -88,7 +88,6 @@ enum class StepType {
     BundleAdjustment,
     CameraInfo,
     FeatureExtraction,
-    ImageLoading,
     ImuDataLoading,
     IntrinsicInit,
     PoseInit,
@@ -107,8 +106,6 @@ inline std::string ToString(StepType const data) {
         return "camera_info";
     } else if (data == StepType::FeatureExtraction) {
         return "feature_extraction";
-    } else if (data == StepType::ImageLoading) {
-        return "image_loading";
     } else if (data == StepType::ImuDataLoading) {
         return "imu_data_loading";
     } else if (data == StepType::IntrinsicInit) {

@@ -7,7 +7,6 @@
 #include "steps/bundle_adjustment.hpp"
 #include "steps/camera_info.hpp"
 #include "steps/feature_extraction.hpp"
-#include "steps/image_loading.hpp"
 #include "steps/imu_data_loading.hpp"
 #include "steps/initialize_workflow.hpp"
 #include "steps/intrinsic_init.hpp"
@@ -102,17 +101,25 @@ std::vector<CamStageIds> CamStages(steps::CalibrationContext const& context, Ste
     for (auto const& camera : context.assets.cameras) {
         log->info("\033[35m{{'stage': 'single_cam', 'asset': {}}}\033[0m", camera);
 
+        // NOTE(Jack): The first image in the sampler will get used by the camera info step, and be written to the
+        // database as a reference image. I believe that this image is then gone from the image sampler and will not
+        // have features extracted from it. That means if we have n images, that we only will run feature extraction on
+        // n-1 images.
+        // WARN(Jack): The first image will have a different step_id than the images that go through feature extraction!
+        // Does that matter? The first frame is kind of a throw away frame anyway.
         ImageInput const& image_input{image_inputs.at(camera.config.sensor_name)};
 
-        steps::ImageLoading const image_loading{camera.id, image_input.signature, image_input.source};
-        StepId const image_loading_id{steps::RunStep<steps::ImageLoading>(context.workflow_id, image_loading, db)};
-
-        steps::CameraInfoStep const camera_info{camera.id, image_loading_id, camera.config.camera_model, db};
+        steps::CameraInfoStep const camera_info{camera.id, image_input.signature, image_input.source,
+                                                camera.config.camera_model};
         StepId const camera_info_id{RunStep<steps::CameraInfoStep>(context.workflow_id, camera_info, db)};
 
-        steps::FeatureExtraction const feature_extraction{
-            camera.id,      image_loading_id,         context.application.show_extraction,
-            target_info_id, context.assets.target.id, db};
+        steps::FeatureExtraction const feature_extraction{camera.id,
+                                                          image_input.signature,
+                                                          image_input.source,
+                                                          context.application.show_extraction,
+                                                          target_info_id,
+                                                          context.assets.target.id,
+                                                          db};
         StepId const targets_id{RunStep<steps::FeatureExtraction>(context.workflow_id, feature_extraction, db)};
 
         steps::IntrinsicInit const intrinsic_init{

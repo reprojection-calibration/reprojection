@@ -117,13 +117,13 @@ TEST(DatabaseCalibDb, TestGetOrCreateStep) {
     Hash const hash_a{"sha256-aaa"};
 
     // Insert a new step - cache miss.
-    auto result{database::GetOrCreateStep(db.get(), StepType::ImageLoading, hash_a)};
+    auto result{database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, hash_a)};
     EXPECT_EQ(result.first, StepId{1});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
     // Until we "database::StepCacheKeyUpdate()" it will insert a new step and be a cache miss because there is no
     // cache_key in the database yet.
-    result = database::GetOrCreateStep(db.get(), StepType::ImageLoading, hash_a);
+    result = database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, hash_a);
     EXPECT_EQ(result.first, StepId{2});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 
@@ -131,13 +131,13 @@ TEST(DatabaseCalibDb, TestGetOrCreateStep) {
     database::StepCacheKeyUpdate(db.get(), result.first, hash_a);
 
     // Now that the cache key is there we get a cache hit.
-    result = database::GetOrCreateStep(db.get(), StepType::ImageLoading, hash_a);
+    result = database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, hash_a);
     EXPECT_EQ(result.first, StepId{2});
     EXPECT_EQ(result.second, CacheStatus::CacheHit);
 
-    // Adding another ImageLoading step with a different cache key increments the step id and is a cache miss.
+    // Adding another FeatureExtraction step with a different cache key increments the step id and is a cache miss.
     Hash const hash_b{"sha256-bbb"};
-    result = database::GetOrCreateStep(db.get(), StepType::ImageLoading, hash_b);
+    result = database::GetOrCreateStep(db.get(), StepType::FeatureExtraction, hash_b);
     EXPECT_EQ(result.first, StepId{3});
     EXPECT_EQ(result.second, CacheStatus::CacheMiss);
 }
@@ -174,13 +174,11 @@ class CalibDbFixture : public ::testing::Test {
         database::ImagesInsert(db_.get(), step_id, asset_id, {{timestamp_ns, ImageBuffer{}}});
     }
 
-    StepId CreateExtractedTargets(StepId const image_loading_id, AssetId const asset_id,
-                                  uint64_t const timestamp_ns = 0) {
-        auto const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
-
-        database::TargetsInsert(db_.get(), step_id, image_loading_id, asset_id, {{timestamp_ns, ExtractedTarget{}}});
-
-        return step_id;
+    void CreateExtractedTargets(StepId const step_id, AssetId const asset_id, uint64_t const timestamp_ns = 0) {
+        // TODO(Jack): Passing the same step_id here twice is a legacy of the "image loading" step which has now been
+        // removed. This should be refactored to pass just the one step id and remove the FK dependency of the feature
+        // extraction step.
+        database::TargetsInsert(db_.get(), step_id, step_id, asset_id, {{timestamp_ns, ExtractedTarget{}}});
     }
 
     SqlitePtr db_{database::OpenCalibDb(":memory:", true)};
@@ -189,13 +187,13 @@ class CalibDbFixture : public ::testing::Test {
 TEST_F(CalibDbFixture, TestCameraPoses) {
     // Satisfy foreign key dependencies - a pose depends on a target which depends on an image.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
-    InsertImage(image_loading_id, asset_id);
-    StepId const extracted_targets_id{CreateExtractedTargets(image_loading_id, asset_id)};
+    StepId const feat_ex_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
+    InsertImage(feat_ex_id, asset_id);
+    CreateExtractedTargets(feat_ex_id, asset_id);
 
     Frames const camera_poses{Frame{0, Array6d::Ones(6)}};
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
-    EXPECT_NO_THROW(database::CameraPosesInsert(db_.get(), step_id, extracted_targets_id, asset_id, camera_poses));
+    EXPECT_NO_THROW(database::CameraPosesInsert(db_.get(), step_id, feat_ex_id, asset_id, camera_poses));
 
     auto const result{database::CameraPosesSelect(db_.get(), step_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
@@ -218,7 +216,7 @@ TEST(DatabaseCalibDb, TestControlPoints) {
 
 TEST_F(CalibDbFixture, TestImages) {
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
+    StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
 
     uint64_t const timestamp_ns{0};
     EXPECT_NO_THROW(InsertImage(step_id, asset_id, timestamp_ns));
@@ -284,13 +282,12 @@ TEST(DatabaseCalibDb, TestIntrinsics) {
 TEST_F(CalibDbFixture, TestExtractedTargets) {
     // Satisfy foreign keys - a target requires a corresponding image to be present.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
-    InsertImage(image_loading_id, asset_id);
+    StepId const feat_ex_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
+    InsertImage(feat_ex_id, asset_id);
 
-    StepId step_id;
-    EXPECT_NO_THROW(step_id = CreateExtractedTargets(image_loading_id, asset_id));
+    EXPECT_NO_THROW(CreateExtractedTargets(feat_ex_id, asset_id));
 
-    TargetSamples const result{database::TargetsSelect(db_.get(), step_id, asset_id)};
+    TargetSamples const result{database::TargetsSelect(db_.get(), feat_ex_id, asset_id)};
     EXPECT_EQ(std::size(result), 1);
     EXPECT_EQ(result.at(0).indices.size(), 0);
 }
@@ -342,23 +339,23 @@ TEST_F(CalibDbFixture, TestReprojectionErrors) {
 
     // Satisfy foreign keys - a target requires a corresponding image to be present.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
-    InsertImage(image_loading_id, asset_id, timestamp_ns);
-    StepId const targets_id{CreateExtractedTargets(image_loading_id, asset_id, timestamp_ns)};
+    StepId const feat_ex_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
+    InsertImage(feat_ex_id, asset_id, timestamp_ns);
+    CreateExtractedTargets(feat_ex_id, asset_id, timestamp_ns);
 
     ReprojectionError const data{asset_id, timestamp_ns, timestamp_ns, ArrayX2d{}};
 
     StepId const reprojection_error_id{database::GetOrCreateStep(db_.get(), StepType::PoseInit, "").first};
     EXPECT_NO_THROW(
-        database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, {{asset_id, targets_id}}, {data}));
+        database::ReprojectionErrorsInsert(db_.get(), reprojection_error_id, {{asset_id, feat_ex_id}}, {data}));
 }
 
 TEST_F(CalibDbFixture, TestRigState) {
     // Satisfy foreign key dependencies - a pose depends on a target which depends on an image.
     AssetId const asset_id{database::GetOrCreateAsset(db_.get(), AssetType::Camera, 0, "")};
-    StepId const image_loading_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
-    InsertImage(image_loading_id, asset_id);
-    StepId const extracted_targets_id{CreateExtractedTargets(image_loading_id, asset_id)};
+    StepId const feat_ex_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
+    InsertImage(feat_ex_id, asset_id);
+    CreateExtractedTargets(feat_ex_id, asset_id);
 
     // Build rig  - needs a second asset id so the extrinsic table foreign key constraint will be satisfied - also
     // because we cannot create self referencing identity extrinsic in the rig state.
@@ -368,7 +365,7 @@ TEST_F(CalibDbFixture, TestRigState) {
     transforms::RigState const rig_state{asset_id, rig_poses, transforms::Extrinsics{{extrinsic}}};
 
     StepId const step_id{database::GetOrCreateStep(db_.get(), StepType::VisualInertialOpt, "").first};
-    EXPECT_NO_THROW(database::RigStateInsert(db_.get(), step_id, extracted_targets_id, rig_state));
+    EXPECT_NO_THROW(database::RigStateInsert(db_.get(), step_id, feat_ex_id, rig_state));
 }
 
 TEST(DatabaseCalibDb, TestSplineInfo) {

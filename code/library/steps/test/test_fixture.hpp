@@ -47,7 +47,7 @@ class StepTestFixture : public ::testing::Test {
     }
 
     StepId InsertImages(AssetId const camera_id, ImageSamples const& images) {
-        auto const step_id{database::GetOrCreateStep(db_.get(), StepType::ImageLoading, "").first};
+        auto const step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
         database::ImagesInsert(db_.get(), step_id, camera_id, images);
 
         return step_id;
@@ -81,12 +81,11 @@ class StepTestFixture : public ::testing::Test {
             }
             return images;
         }()};
-        StepId const image_loading_id{InsertImages(camera.id, images)};
+        StepId const step_id{InsertImages(camera.id, images)};
 
-        StepId const target_step_id{database::GetOrCreateStep(db_.get(), StepType::FeatureExtraction, "").first};
-        database::TargetsInsert(db_.get(), target_step_id, image_loading_id, camera.id, targets);
+        database::TargetsInsert(db_.get(), step_id, step_id, camera.id, targets);
 
-        return target_step_id;
+        return step_id;
     }
 
     StepId InsertIntrinsic(AssetId const camera_id) {
@@ -219,4 +218,28 @@ class StepTestFixture : public ::testing::Test {
     };
 
     TimingParameters timing_{};
+};
+
+class ImageSamplerFixture : public StepTestFixture {
+   protected:
+    void SetUp() override {
+        StepTestFixture::SetUp();
+
+        camera_id_ = context_.assets.cameras.front().id;
+        encoded_images_ = TestImageSamples();
+        image_sampler_ = [itr = std::cbegin(encoded_images_),
+                          end = std::cend(encoded_images_)]() mutable -> std::optional<std::pair<uint64_t, cv::Mat>> {
+            if (itr != end) {
+                auto const& [timestamp_ns, buffer_i]{*itr};
+                cv::Mat const img_i{cv::imdecode(buffer_i.data, cv::IMREAD_GRAYSCALE)};
+                itr = std::next(itr);
+                return std::pair{timestamp_ns, img_i};
+            }
+            return std::nullopt;
+        };
+    }
+
+    AssetId camera_id_;
+    ImageSamples encoded_images_;
+    ImageSampler image_sampler_;
 };

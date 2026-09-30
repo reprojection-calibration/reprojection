@@ -1,6 +1,5 @@
 #include "feature_extraction/target_extraction.hpp"
 
-#include "logging/logging.hpp"
 #include "types/calibration_types.hpp"
 #include "types/enums.hpp"
 
@@ -9,25 +8,10 @@
 
 namespace reprojection::feature_extraction {
 
-namespace {
-
-auto const log{logging::Get("feature_extraction")};
-
-}
-
-// TODO(Jack): If we run into trouble one day with different opencv image formats and depths we should extract the
-// image type processing code here and unit test it.
 std::optional<ExtractedTarget> TargetExtractor::Extract(cv::Mat const& img) {
-    log->debug("{{'input_image': {{'height': {}, 'width': {}, 'depth': '{}', 'channels': {}}}}}", img.rows, img.cols,
-               cv::depthToString(img.depth()), img.channels());
-
     cv::Mat const img_gray{ToGray(img)};
-    auto const extracted_target{ExtractImplementation(img_gray)};
 
-    log->debug("{{'successful_extraction': {}, 'num_features': {}}}", extracted_target.has_value(),
-               extracted_target ? extracted_target.value().indices.rows() : 0);
-
-    return extracted_target;
+    return ExtractImplementation(img_gray);
 }
 
 std::unique_ptr<TargetExtractor> CreateTargetExtractor(TargetInfo const& target_info) {
