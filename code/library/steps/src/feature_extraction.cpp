@@ -58,6 +58,14 @@ void FeatureExtraction::Execute(StepId const step_id, SqlitePtr const db) const 
         imgs.insert({timestamp_ns, {}});
 
         // LCOV_EXCL_START
+        if (std::size(imgs) % 25 == 0) {
+            log->debug(
+                "{{{}, 'num_extracted_targets': {}, 'num_images': {}, 'input_image': {{'timestamp_ns': {}, 'width': "
+                "{}, 'height': {}, 'depth': '{}', 'channels': {}}}}}",
+                StepLogInfo{Type(), step_id, camera_id_}, std::size(extracted_targets), std::size(imgs), timestamp_ns,
+                img.cols, img.rows, cv::depthToString(img.depth()), img.channels());
+        }
+
         if (show_extraction_) {
             if (target.has_value()) {
                 feature_extraction::DrawTarget(*target, img);
