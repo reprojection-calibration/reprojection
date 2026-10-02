@@ -14,6 +14,11 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& o
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::DENSE_SCHUR, num_threads};
     ceres::Problem problem{ceres_state.problem_options};
 
+    Array3d zero_bias{Array3d::Zero()};
+    Array3d zero_bias_1{Array3d::Zero()};
+    Array3d zero_bias_2{Array3d::Zero()};
+    Array3d zero_bias_3{Array3d::Zero()};
+
     Array6d se3_imu_rig{0, 0, 0, 0, 0, 0};
     for (auto const timestamp_ns : omega_imu | std::views::keys) {
         auto const normalized_position{spline.GetTimeHandler().SplinePosition(timestamp_ns, spline.Size())};
@@ -30,13 +35,19 @@ std::pair<Array3d, CeresState> AngularVelocityAlignment(VelocitySamples const& o
                                  spline.ControlPoint(i),      //
                                  spline.ControlPoint(i + 1),  //
                                  spline.ControlPoint(i + 2),  //
-                                 spline.ControlPoint(i + 3));
+                                 spline.ControlPoint(i + 3), zero_bias.data(), zero_bias_1.data(), zero_bias_2.data(),
+                                 zero_bias_3.data());
 
         // NOTE(Jack): We only want to initialize the extrinsic orientation between the imu and camera therefore we set
         // the control points constant.
         for (int j{0}; j < 4; ++j) {
             problem.SetParameterBlockConstant(spline.ControlPoint(i + j));
         }
+
+        problem.SetParameterBlockConstant(zero_bias.data());
+        problem.SetParameterBlockConstant(zero_bias_1.data());
+        problem.SetParameterBlockConstant(zero_bias_2.data());
+        problem.SetParameterBlockConstant(zero_bias_3.data());
     }
 
     ceres::Solve(ceres_state.solver_options, &problem, &ceres_state.solver_summary);

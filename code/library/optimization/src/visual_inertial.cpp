@@ -2,7 +2,9 @@
 
 #include <ceres/loss_function.h>
 
+#include <fstream>
 #include <ranges>
+#include <stdexcept>
 
 #include "cost_functions/reprojection_error_spline.hpp"
 #include "cost_functions/rigid_body_angular_velocity.hpp"
@@ -11,13 +13,7 @@
 #include "optimization/bundle_adjustment.hpp"
 #include "spline/spline_init.hpp"
 
-
-
-#include <fstream>
-#include <stdexcept>
-
-void SaveBiasSplineCsv(reprojection::spline::MatrixNXd const& bias_spline,
-                       std::string const& filename) {
+void SaveBiasSplineCsv(reprojection::spline::MatrixNXd const& bias_spline, std::string const& filename) {
     if (bias_spline.rows() != 3) {
         throw std::runtime_error("Expected bias_spline to have exactly 3 rows");
     }
@@ -30,10 +26,7 @@ void SaveBiasSplineCsv(reprojection::spline::MatrixNXd const& bias_spline,
     file << "index,x,y,z\n";
 
     for (Eigen::Index i = 0; i < bias_spline.cols(); ++i) {
-        file << i << ","
-             << bias_spline(0, i) << ","
-             << bias_spline(1, i) << ","
-             << bias_spline(2, i) << "\n";
+        file << i << "," << bias_spline(0, i) << "," << bias_spline(1, i) << "," << bias_spline(2, i) << "\n";
     }
 }
 
@@ -49,7 +42,8 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
 
     // TODO WE SHOULD  PROBABLY HAVE LOWER FREQUENCY HERE! When that happens then we need to initialize our own
     // timehandler with its own delta_t.
-    spline::MatrixNXd bias_spline{spline::MatrixNXd::Zero(spline::N, spline.Size())};
+    spline::MatrixNXd accel_bias_spline{spline::MatrixNXd::Zero(spline::N, spline.Size())};
+    spline::MatrixNXd gyro_bias_spline{spline::MatrixNXd::Zero(spline::N, spline.Size())};
 
     // Imu residuals
     for (auto const timestamp_ns : problem.imu_data | std::views::keys) {
@@ -71,7 +65,11 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
                                        spline.ControlPoint(i),                    //
                                        spline.ControlPoint(i + 1),                //
                                        spline.ControlPoint(i + 2),                //
-                                       spline.ControlPoint(i + 3));
+                                       spline.ControlPoint(i + 3),                //
+                                       gyro_bias_spline.col(i).data(),            //
+                                       gyro_bias_spline.col(i + 1).data(),        //
+                                       gyro_bias_spline.col(i + 2).data(),        //
+                                       gyro_bias_spline.col(i + 3).data());
 
         ceres::CostFunction* const accelerometer_cost_function{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data_i.linear_acceleration, u_i, spline.GetTimeHandler().delta_t_ns_)};
@@ -82,10 +80,10 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
                                        spline.ControlPoint(i + 1),                //
                                        spline.ControlPoint(i + 2),                //
                                        spline.ControlPoint(i + 3),                //
-                                       bias_spline.col(i).data(),                 //
-                                       bias_spline.col(i + 1).data(),             //
-                                       bias_spline.col(i + 2).data(),             //
-                                       bias_spline.col(i + 3).data());
+                                       accel_bias_spline.col(i).data(),           //
+                                       accel_bias_spline.col(i + 1).data(),       //
+                                       accel_bias_spline.col(i + 2).data(),       //
+                                       accel_bias_spline.col(i + 3).data());
     }
 
     // Reprojection residuals
@@ -138,16 +136,27 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
     // R3 Smoothness/minimum energy constraint!!
     for (int i{0}; i < spline.Size() - 3; ++i) {
         ceres::CostFunction* const cost_function{cost_functions::R3SplineEnergy::Create(1)};
-        ceres_problem.AddResidualBlock(cost_function, nullptr,         //
-                                       bias_spline.col(i).data(),      //
-                                       bias_spline.col(i + 1).data(),  //
-                                       bias_spline.col(i + 2).data(),  //
-                                       bias_spline.col(i + 3).data());
+        ceres_problem.AddResidualBlock(cost_function, nullptr,               //
+                                       accel_bias_spline.col(i).data(),      //
+                                       accel_bias_spline.col(i + 1).data(),  //
+                                       accel_bias_spline.col(i + 2).data(),  //
+                                       accel_bias_spline.col(i + 3).data());
+    }
+
+    // R3 Smoothness/minimum energy constraint!!
+    for (int i{0}; i < spline.Size() - 3; ++i) {
+        ceres::CostFunction* const cost_function{cost_functions::R3SplineEnergy::Create(1)};
+        ceres_problem.AddResidualBlock(cost_function, nullptr,              //
+                                       gyro_bias_spline.col(i).data(),      //
+                                       gyro_bias_spline.col(i + 1).data(),  //
+                                       gyro_bias_spline.col(i + 2).data(),  //
+                                       gyro_bias_spline.col(i + 3).data());
     }
 
     ceres::Solve(ceres_state.solver_options, &ceres_problem, &ceres_state.solver_summary);
 
-    SaveBiasSplineCsv(bias_spline, "/tmp/reprojection/code/test_data/bias_spline.csv");
+    SaveBiasSplineCsv(accel_bias_spline, "/tmp/reprojection/code/test_data/accel_bias_spline.csv");
+    SaveBiasSplineCsv(gyro_bias_spline, "/tmp/reprojection/code/test_data/gyro_bias_spline.csv");
 
     return {result, ceres_state};
 }

@@ -49,9 +49,6 @@ void VisualInertialInit::Execute(StepId const step_id, SqlitePtr const db) const
     database::ExtrinsicInsert(db.get(), step_id, extrinsic);
     database::GravityInsert(db.get(), step_id, gravity_w);
 
-    // Diagnostic output.
-    ImuErrors const errors{optimization::EvaluateImuError(imu_data_, extrinsic, gravity_w, *spline_)};
-    database::ImuErrorsInsert(db.get(), step_id, imu_data_id_, imu_id_, errors);
 }
 
 }  // namespace reprojection::steps

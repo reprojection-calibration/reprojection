@@ -19,7 +19,9 @@ class RigidBodyAngularVelocity {
    public:
     template <typename T>
     bool operator()(T const* const tf_imu_co_ptr, T const* const cp_0_ptr, T const* const cp_1_ptr,
-                    T const* const cp_2_ptr, T const* const cp_3_ptr, T* const residual_ptr) const {
+                    T const* const cp_2_ptr, T const* const cp_3_ptr, T const* const b_cp_0_ptr,
+                    T const* const b_cp_1_ptr, T const* const b_cp_2_ptr, T const* const b_cp_3_ptr,
+                    T* const residual_ptr) const {
         auto const P{BuildP<T, 3>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
 
         Array3<T> const omega_co{spline::So3Spline::Evaluate<T, spline::DerivativeOrder::First>(P, u_i_, delta_t_ns_)};
@@ -27,8 +29,12 @@ class RigidBodyAngularVelocity {
         Eigen::Map<Eigen::Vector<T, 3> const> aa_imu_co(tf_imu_co_ptr);
         Vector3<T> const omega_imu{RotatePoint<T>(aa_imu_co, omega_co)};
 
+        // TODO DO WE NEED BIAS SPECIFIC TIME INFORMATION?
+        auto const b_P{BuildP<T, 3>(b_cp_0_ptr, b_cp_1_ptr, b_cp_2_ptr, b_cp_3_ptr)};
+        Vector3<T> const bias{spline::R3Spline::Evaluate<T, spline::DerivativeOrder::Null>(b_P, u_i_, delta_t_ns_)};
+
         Eigen::Map<Array3<T>> residual(residual_ptr);
-        residual = omega_imu_.template cast<T>() - omega_imu;
+        residual = omega_imu_.template cast<T>() + bias - omega_imu;
 
         return true;
     }
@@ -45,7 +51,7 @@ class RigidBodyAngularVelocity {
     // Therefore we are forced to make the RigidBodyAngularVelocity cost function accept the full length 6 control
     // points parameter blocks, but in the cost function itself we will only use the rotation parts.
     static ceres::CostFunction* Create(Vector3d const& omega_imu, double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<RigidBodyAngularVelocity, 3, 6, 6, 6, 6, 6>(
+        return new ceres::AutoDiffCostFunction<RigidBodyAngularVelocity, 3, 6, 6, 6, 6, 6, 3, 3, 3, 3>(
             new RigidBodyAngularVelocity(omega_imu, u_i, delta_t_ns));
     }
 
