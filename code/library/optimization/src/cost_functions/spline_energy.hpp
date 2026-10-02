@@ -47,4 +47,33 @@ class SplineEnergy {
     spline::CoefficientBlock omega_;
 };
 
+// TODO REFACTOR TO PROPERLY HANDLE R3 CASE!
+class R3SplineEnergy {
+   public:
+    template <typename T>
+    bool operator()(T const* const cp_0_ptr, T const* const cp_1_ptr, T const* const cp_2_ptr, T const* const cp_3_ptr,
+                    T* const residual_ptr) const {
+        auto const P{BuildP<T, 3>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
+
+        Eigen::Vector<T, 12> const rotations{P.template topRows<3>().reshaped()};
+
+        Eigen::Ref<Eigen::Vector<T, 12>> residuals{Eigen::Map<Eigen::Vector<T, 12>>(residual_ptr, 12, 1)};
+        residuals.template topRows<12>() = omega_ * rotations;
+
+        return true;
+    }
+
+    static ceres::CostFunction* Create(uint64_t const delta_t_ns) {
+        // WARN(Jack): Do not hardcode lambda!?
+        spline::CoefficientBlock const omega{spline::BuildOmega(delta_t_ns, 1e3)};
+
+        return new ceres::AutoDiffCostFunction<R3SplineEnergy, 12, 3, 3, 3, 3>(new R3SplineEnergy(omega));
+    }
+
+    // TODO(Jack): Is it proper to have omega here directly? I am not 100% sure that is the proper way to carry over the
+    // constraint from the linear initialization solver to here, but it seems to work at least for the simple case.
+    // Someone with a strong understanding of optimization should take a look here.
+    spline::CoefficientBlock omega_;
+};
+
 }  // namespace reprojection::optimization::cost_functions

@@ -11,6 +11,32 @@
 #include "optimization/bundle_adjustment.hpp"
 #include "spline/spline_init.hpp"
 
+
+
+#include <fstream>
+#include <stdexcept>
+
+void SaveBiasSplineCsv(reprojection::spline::MatrixNXd const& bias_spline,
+                       std::string const& filename) {
+    if (bias_spline.rows() != 3) {
+        throw std::runtime_error("Expected bias_spline to have exactly 3 rows");
+    }
+
+    std::ofstream file(filename);
+    if (!file) {
+        throw std::runtime_error("Could not open file: " + filename);
+    }
+
+    file << "index,x,y,z\n";
+
+    for (Eigen::Index i = 0; i < bias_spline.cols(); ++i) {
+        file << i << ","
+             << bias_spline(0, i) << ","
+             << bias_spline(1, i) << ","
+             << bias_spline(2, i) << "\n";
+    }
+}
+
 namespace reprojection::optimization {
 
 std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem const& problem, int num_threads) {
@@ -20,6 +46,10 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
     // TODO(Jack): What is the correct linear solver?
     CeresState ceres_state{ceres::TAKE_OWNERSHIP, ceres::SPARSE_NORMAL_CHOLESKY, num_threads};
     ceres::Problem ceres_problem{ceres_state.problem_options};
+
+    // TODO WE SHOULD  PROBABLY HAVE LOWER FREQUENCY HERE! When that happens then we need to initialize our own
+    // timehandler with its own delta_t.
+    spline::MatrixNXd bias_spline{spline::MatrixNXd::Zero(spline::N, spline.Size())};
 
     // Imu residuals
     for (auto const timestamp_ns : problem.imu_data | std::views::keys) {
@@ -51,7 +81,11 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
                                        spline.ControlPoint(i),                    //
                                        spline.ControlPoint(i + 1),                //
                                        spline.ControlPoint(i + 2),                //
-                                       spline.ControlPoint(i + 3));
+                                       spline.ControlPoint(i + 3),                //
+                                       bias_spline.col(i).data(),                 //
+                                       bias_spline.col(i + 1).data(),             //
+                                       bias_spline.col(i + 2).data(),             //
+                                       bias_spline.col(i + 3).data());
     }
 
     // Reprojection residuals
@@ -101,7 +135,19 @@ std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem cons
                                        spline.ControlPoint(i + 3));
     }
 
+    // R3 Smoothness/minimum energy constraint!!
+    for (int i{0}; i < spline.Size() - 3; ++i) {
+        ceres::CostFunction* const cost_function{cost_functions::R3SplineEnergy::Create(1)};
+        ceres_problem.AddResidualBlock(cost_function, nullptr,         //
+                                       bias_spline.col(i).data(),      //
+                                       bias_spline.col(i + 1).data(),  //
+                                       bias_spline.col(i + 2).data(),  //
+                                       bias_spline.col(i + 3).data());
+    }
+
     ceres::Solve(ceres_state.solver_options, &ceres_problem, &ceres_state.solver_summary);
+
+    SaveBiasSplineCsv(bias_spline, "/tmp/reprojection/code/test_data/bias_spline.csv");
 
     return {result, ceres_state};
 }
@@ -192,6 +238,13 @@ ImuErrors EvaluateImuError(ImuSamples const& imu_data, Extrinsic const& extrinsi
         cost_function_1->Evaluate(parameter_blocks.data(), residual_i.topRows<3>().data(), nullptr);
 
         parameter_blocks.insert(std::cbegin(parameter_blocks) + 1, gravity.data());
+
+        // TODO SHOULD REALLY PASS IN REAL BIAS!
+        Array3d const bias{Array3d::Zero()};
+        for (int j{0}; j < 4; ++j) {
+            parameter_blocks.push_back(bias.data());
+        }
+
         ceres::CostFunction const* const cost_function_2{cost_functions::RigidBodyLinearAcceleration::Create(
             imu_data.at(timestamp_ns).linear_acceleration, u_i, spline_w_co.GetTimeHandler().delta_t_ns_)};
 
