@@ -14,7 +14,7 @@
 namespace reprojection::optimization {
 
 std::pair<VisualInertial::Result, CeresState> VisualInertial::Solve(Problem const& problem, int num_threads) {
-    VisualInertial::Result result{problem};
+    Result result{problem};
     auto& spline{result.rig.spline};
 
     // TODO(Jack): What is the correct linear solver?
