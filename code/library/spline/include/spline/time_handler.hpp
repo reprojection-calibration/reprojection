@@ -10,7 +10,7 @@ namespace reprojection::spline {
 
 class TimeHandler {
    public:
-    TimeHandler(std::uint64_t const t0_ns, std::uint64_t const delta_t_ns);
+    TimeHandler(std::uint64_t t0_ns, std::uint64_t delta_t_ns);
 
     TimeHandler();
 

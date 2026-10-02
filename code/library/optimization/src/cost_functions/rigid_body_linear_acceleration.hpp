@@ -23,7 +23,8 @@ class RigidBodyLinearAcceleration {
     template <typename T>
     bool operator()(T const* const tf_imu_co_ptr, T const* const gravity_w_ptr, T const* const cp_0_ptr,
                     T const* const cp_1_ptr, T const* const cp_2_ptr, T const* const cp_3_ptr,
-                    T* const residual) const {
+                    T const* const b_cp_0_ptr, T const* const b_cp_1_ptr, T const* const b_cp_2_ptr,
+                    T const* const b_cp_3_ptr, T* const residual) const {
         auto const P{BuildP<T, 6>(cp_0_ptr, cp_1_ptr, cp_2_ptr, cp_3_ptr)};
         auto const so3{P.template topRows<3>()};
 
@@ -54,9 +55,13 @@ class RigidBodyLinearAcceleration {
         // force).
         Vector3<T> const specific_force_imu{acc_imu + gravity_imu};
 
-        residual[0] = T(acc_imu_[0]) - specific_force_imu[0];
-        residual[1] = T(acc_imu_[1]) - specific_force_imu[1];
-        residual[2] = T(acc_imu_[2]) - specific_force_imu[2];
+        // TODO DO WE NEED BIAS SPECIFIC TIME INFORMATION?
+        auto const b_P{BuildP<T, 3>(b_cp_0_ptr, b_cp_1_ptr, b_cp_2_ptr, b_cp_3_ptr)};
+        Array3<T> const bias{R3Spline::Evaluate<T, spline::DerivativeOrder::Null>(b_P, u_i_, delta_t_ns_)};
+
+        residual[0] = T(acc_imu_[0]) + bias[0] - specific_force_imu[0];
+        residual[1] = T(acc_imu_[1]) + bias[1] - specific_force_imu[1];
+        residual[2] = T(acc_imu_[2]) + bias[2] - specific_force_imu[2];
         // TODO(Jack): Fixing this here might be/likely is adding a fixed bias to then estimate proportional to the
         // deviation between real gravity as measured and the value of kGravity.
         residual[3] = T(kGravity * kGravity) -
@@ -66,7 +71,7 @@ class RigidBodyLinearAcceleration {
     }
 
     static ceres::CostFunction* Create(Vector3d const& acc_imu, double const u_i, uint64_t const delta_t_ns) {
-        return new ceres::AutoDiffCostFunction<RigidBodyLinearAcceleration, 4, 6, 3, 6, 6, 6, 6>(
+        return new ceres::AutoDiffCostFunction<RigidBodyLinearAcceleration, 4, 6, 3, 6, 6, 6, 6, 3, 3, 3, 3>(
             new RigidBodyLinearAcceleration(acc_imu, u_i, delta_t_ns));
     }
 
