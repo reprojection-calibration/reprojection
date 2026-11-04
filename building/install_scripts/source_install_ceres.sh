@@ -17,12 +17,12 @@ cmake_install \
     "${buildroot}/${name}"
 
 name="ceres-solver-2.2.0"
-ceres_sha256="48b2302a7986ece172898477c3bcd6deb8fb5cf19b3327bc49969aad4cede82d"
+ceres_sha256="12efacfadbfdc1bbfa203c236e96f4d3c210bed96994288b3ff0c8e7c6f350d4"
 download_and_extract \
-    http://ceres-solver.org/${name}.tar.gz \
-    "${buildroot}" \
-    "${ceres_sha256}"
-
+    https://github.com/ceres-solver/ceres-solver/archive/refs/tags/2.2.0.tar.gz \
+    "${buildroot}/${name}" \
+    "${ceres_sha256}" \
+    1
 cmake_build \
     "${buildroot}/${name}" \
     -DBUILD_BENCHMARKS=OFF \

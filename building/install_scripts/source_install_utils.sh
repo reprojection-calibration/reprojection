@@ -14,14 +14,13 @@ download_and_extract() {
     local url=$1
     local dest=$2
     local sha256=$3
+    local strip_components=${4:-0}
+
+    local file="${dest}/$(basename "${url}")"
 
     wget --directory-prefix="${dest}" "${url}"
-    file="${dest}/$(basename "${url}")"
-
-    # Check the downloaded sha256 against the known sha256.
     echo "${sha256}  ${file}" | sha256sum --check --status
-
-    tar -xf "${file}" -C "${dest}"
+    tar -xf "${file}" -C "${dest}" --strip-components="${strip_components}"
 }
 
 # NOTE(Jack): We want control over when we build/install/test so we have three different functions. The only annoying
