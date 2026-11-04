@@ -86,6 +86,12 @@ FROM apt-base-stage AS base-stage
 COPY --from=build-ceres-stage /usr/local /usr/local
 COPY --from=build-small-libraries-stage /usr/local /usr/local
 
+# NOTE(Jack): We need eigen and april tags to build this! Both things we source install.
+ARG SOURCE_INSTALL_FEATURE_EXTRACTION=building/install_scripts/source_install_feature_extraction.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${SOURCE_INSTALL_FEATURE_EXTRACTION},target=/temporary/${SOURCE_INSTALL_FEATURE_EXTRACTION} \
+    /temporary/${SOURCE_INSTALL_FEATURE_EXTRACTION}
+
 # TODO(Jack): We cannot install to the default $HOME directory (pyenv's default) because in our current userless setup
 # that defaults to /root. This is fine during the build process but the second that we actually want to run the
 # the dashboard for example we get 'permission denied' errors from the python environment.
