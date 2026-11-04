@@ -9,6 +9,7 @@ set(PRIVATE_LINK_LIBRARIES
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES
+        reprojection::feature_extraction
         tomlplusplus::tomlplusplus
 )
 AddLibrary()

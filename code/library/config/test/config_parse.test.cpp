@@ -4,6 +4,8 @@
 
 #include <format>
 
+#include "feature_extraction/types.hpp"
+
 // cppcheck-suppress missingInclude
 #include "testing_utilities/generated/calibration_config.hpp"
 
@@ -28,7 +30,7 @@ TEST(ConfigParsingHelpers, TestConfigParse) {
     ASSERT_TRUE(result.imu.has_value());
     EXPECT_EQ(result.imu->sensor_name, "/imu0");
 
-    EXPECT_EQ(result.target.target_type, TargetType::Aprilgrid3);
+    EXPECT_EQ(result.target.target_type, feature_extraction::TargetType::Aprilgrid3);
     EXPECT_EQ(result.target.size[0], 5);
     EXPECT_EQ(result.target.size[1], 4);
     EXPECT_EQ(result.target.unit_dimension, 1);

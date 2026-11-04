@@ -415,7 +415,7 @@ TEST(DatabaseCalibDb, TestTargetInfo) {
     auto const step_id{database::GetOrCreateStep(db.get(), StepType::TargetInfo, "").first};
     AssetId const asset_id{database::GetOrCreateAsset(db.get(), AssetType::Target, 0, "")};
 
-    TargetInfo const target_info{TargetType::Checkerboard, 6, 6, 0.1, false};
+    feature_extraction::TargetInfo const target_info{feature_extraction::TargetType::Checkerboard, 6, 6, 0.1, false};
     EXPECT_NO_THROW(database::TargetInfoInsert(db.get(), step_id, asset_id, target_info));
 
     auto result{database::TargetInfoSelect(db.get(), step_id, asset_id)};

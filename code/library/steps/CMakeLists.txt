@@ -18,7 +18,6 @@ set(SRC_FILES
 
 set(PRIVATE_LINK_LIBRARIES
         calibration
-        feature_extraction
         hashing
         image_viewer
         optimization
@@ -29,6 +28,7 @@ set(PUBLIC_LINK_LIBRARIES
         config
         database
         logging
+        reprojection::feature_extraction
         spline
 )
 AddLibrary()

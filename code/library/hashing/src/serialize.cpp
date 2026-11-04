@@ -94,7 +94,7 @@ std::string Serialize(config::Config::Target const& data) {
     return oss.str();
 }
 
-std::string Serialize(TargetInfo const& data) {
+std::string Serialize(feature_extraction::TargetInfo const& data) {
     config::Config::Target const data1{
         data.asymmetric, {data.height, data.width}, data.target_type, data.unit_dimension};
 

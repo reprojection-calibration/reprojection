@@ -6,6 +6,7 @@
 
 #include <toml++/toml.hpp>
 
+#include "feature_extraction/types.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::config {
@@ -187,7 +188,7 @@ struct Config {
          *  target_type = "circle_grid"
          *  \endcode
          */
-        TargetType target_type;
+        feature_extraction::TargetType target_type;
 
         /** \brief The target's metric scale parameter.
          *
