@@ -98,18 +98,20 @@ inline CameraModel ToCameraModel(std::string_view camera_model) {
     }
 }
 
+using TargetType = feature_extraction::TargetType;
+
 /** \brief Convert a human readable snake_case string into a \ref reprojection::TargetType enum.
  *
  *  \showinlinesource
  *
  */
-inline feature_extraction::TargetType ToTargetType(std::string_view enum_string) {
+inline TargetType ToTargetType(std::string_view enum_string) {
     if (enum_string == "checkerboard") {
-        return feature_extraction::TargetType::Checkerboard;
+        return TargetType::Checkerboard;
     } else if (enum_string == "circle_grid") {
-        return feature_extraction::TargetType::CircleGrid;
+        return TargetType::CircleGrid;
     } else if (enum_string == "aprilgrid3") {
-        return feature_extraction::TargetType::Aprilgrid3;
+        return TargetType::Aprilgrid3;
     } else {
         throw std::runtime_error("LIBRARY IMPLEMENTATION ERROR - ToTargetType(): " + std::string(enum_string));
     }

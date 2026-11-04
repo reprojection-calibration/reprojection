@@ -188,7 +188,7 @@ struct Config {
          *  target_type = "circle_grid"
          *  \endcode
          */
-        feature_extraction::TargetType target_type;
+        TargetType target_type;
 
         /** \brief The target's metric scale parameter.
          *

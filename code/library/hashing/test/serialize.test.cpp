@@ -69,7 +69,7 @@ TEST(HashingSerialize, TestSerializeImuMeasurements) {
 }
 
 TEST(HashingSerialize, TestSerializeTargetInfo) {
-    config::Config::Target const target_info{false, {8, 6}, feature_extraction::TargetType::Aprilgrid3, 0.1};
+    config::Config::Target const target_info{false, {8, 6}, TargetType::Aprilgrid3, 0.1};
 
     std::string const result{hashing::Serialize(target_info)};
     std::string const gt_result{"aprilgrid3|8,6|0.100|0|"};
