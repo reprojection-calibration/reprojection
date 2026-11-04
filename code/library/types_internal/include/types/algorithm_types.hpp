@@ -2,27 +2,17 @@
 
 #include <vector>
 
+#include "feature_extraction/types.hpp"
 #include "types/eigen_types.hpp"
 
 namespace reprojection {
 
-struct Bundle {
-    Bundle operator()(ArrayXi const& valid_ids) const {
-        return Bundle{pixels(valid_ids, Eigen::all), points(valid_ids, Eigen::all)};
-    }
-
-    MatrixX2d pixels;
-    MatrixX3d points;
-};
-
-struct ExtractedTarget {
-    ExtractedTarget operator()(ArrayXi const& valid_ids) const {
-        return ExtractedTarget{bundle(valid_ids), indices(valid_ids, Eigen::all)};
-    }
-
-    Bundle bundle;
-    ArrayX2i indices;
-};
+// NOTE(Jack): Both of these types (Bundle and ExtractedTarget) used to be fully defined here. But when I refactored the
+// feature extraction code into its own package I needed move them too. Here we use a `using` alias to bring the
+// external namespace in as if the two types were local types. This helped prevent us from having to make any code
+// changes even though we are now using the types from the external feature extraction package.
+using Bundle = feature_extraction::Bundle;
+using ExtractedTarget = feature_extraction::ExtractedTarget;
 
 struct ImuData {
     Vector3d angular_velocity;

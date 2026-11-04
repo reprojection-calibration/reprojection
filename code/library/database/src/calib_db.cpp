@@ -621,7 +621,7 @@ void StepDelete(sqlite3* const db, StepId const step_id) {
 }
 
 void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id,
-                      feature_extraction::TargetInfo const& target_info) {
+                      TargetInfo const& target_info) {
     auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -635,9 +635,9 @@ void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const ass
     ExecuteStatement(sql_statements::target_info_insert, binder, db);
 }
 
-std::expected<feature_extraction::TargetInfo, std::string> TargetInfoSelect(sqlite3* const db, StepId const step_id,
+std::expected<TargetInfo, std::string> TargetInfoSelect(sqlite3* const db, StepId const step_id,
                                                                             AssetId const asset_id) {
-    std::optional<feature_extraction::TargetInfo> target_info{std::nullopt};
+    std::optional<TargetInfo> target_info{std::nullopt};
 
     ExecuteQuery(
         db, sql_statements::target_info_select,
@@ -646,7 +646,7 @@ std::expected<feature_extraction::TargetInfo, std::string> TargetInfoSelect(sqli
             Bind(stmt, 2, asset_id.value);
         },
         [&target_info](sqlite3_stmt* const stmt) {
-            feature_extraction::TargetInfo result;
+            TargetInfo result;
             result.target_type = ToTargetType(reinterpret_cast<char const*>(sqlite3_column_text(stmt, 0)));
             result.height = sqlite3_column_int(stmt, 1);
             result.width = sqlite3_column_int(stmt, 2);

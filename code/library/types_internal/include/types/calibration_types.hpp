@@ -27,6 +27,8 @@ struct CameraInfo {
     ImageBounds bounds;
 };
 
+using TargetInfo = feature_extraction::TargetInfo;
+
 struct Intrinsic {
     ArrayXd value;
 };

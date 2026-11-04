@@ -3,7 +3,6 @@
 #include "types/calibration_types.hpp"
 #include "types/database_types.hpp"
 #include "types/io.hpp"
-#include "feature_extraction/types.hpp"
 
 namespace reprojection::steps {
 
@@ -26,7 +25,7 @@ struct FeatureExtraction {
     Hash image_sampler_hash_;
     ImageSampler image_sampler_;
     bool show_extraction_;
-    feature_extraction::TargetInfo target_info_;
+    TargetInfo target_info_;
 };
 
 }  // namespace reprojection::steps

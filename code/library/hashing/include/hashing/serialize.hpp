@@ -3,7 +3,6 @@
 #include <string>
 
 #include "config/config_parse.hpp"
-#include "feature_extraction/types.hpp"
 #include "types/calibration_types.hpp"
 #include "types/sensor_data_types.hpp"
 #include "types/transform_types.hpp"
@@ -32,7 +31,7 @@ std::string Serialize(ImuSamples const& data);
 
 std::string Serialize(OptimizationState const& data);
 
-std::string Serialize(feature_extraction::TargetInfo const& data);
+std::string Serialize(TargetInfo const& data);
 
 std::string Serialize(TargetSamples const& data);
 

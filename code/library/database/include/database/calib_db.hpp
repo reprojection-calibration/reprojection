@@ -3,7 +3,6 @@
 #include <expected>
 #include <filesystem>
 
-#include "feature_extraction/types.hpp"
 #include "spline/time_handler.hpp"
 #include "spline/types.hpp"
 #include "transforms/rig_state.hpp"
@@ -120,8 +119,8 @@ std::expected<spline::TimeHandler, std::string> SplineInfoSelect(sqlite3* db, St
 
 void StepDelete(sqlite3* db, StepId step_id);
 
-void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, feature_extraction::TargetInfo const& target_info);
+void TargetInfoInsert(sqlite3* db, StepId step_id, AssetId asset_id, TargetInfo const& target_info);
 
-std::expected<feature_extraction::TargetInfo, std::string> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
+std::expected<TargetInfo, std::string> TargetInfoSelect(sqlite3* db, StepId step_id, AssetId asset_id);
 
 }  // namespace reprojection::database

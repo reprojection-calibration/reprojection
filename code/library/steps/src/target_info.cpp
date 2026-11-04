@@ -1,7 +1,6 @@
 #include "steps/target_info.hpp"
 
 #include "database/calib_db.hpp"
-#include "feature_extraction/types.hpp"
 #include "hashing/hashing.hpp"
 #include "logging/fmt.hpp"
 #include "logging/logging.hpp"
@@ -20,8 +19,8 @@ TargetInfoStep::TargetInfoStep(AssetId target_id, config::Config::Target const& 
 Hash TargetInfoStep::CacheKey() const { return hashing::HashArgs(target_id_.value, target_); }
 
 void TargetInfoStep::Execute(StepId step_id, SqlitePtr const db) const {
-    feature_extraction::TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1],
-                                                     target_.unit_dimension, target_.asymmetric};
+    TargetInfo const target_info{target_.target_type, target_.size[0], target_.size[1], target_.unit_dimension,
+                                 target_.asymmetric};
 
     log->info(
         "{{{}, 'target_info': {{'target_type': {}, 'rows': {}, 'cols': {}, 'unit_dimension': {}, 'asymmetric': "
