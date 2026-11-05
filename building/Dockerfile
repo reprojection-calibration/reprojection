@@ -78,6 +78,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 FROM apt-base-stage AS base-stage
 
 COPY --from=source-build-stage /usr/local /usr/local
+RUN ldconfig
 
 # TODO(Jack): We cannot install to the default $HOME directory (pyenv's default) because in our current userless setup
 # that defaults to /root. This is fine during the build process but the second that we actually want to run the
@@ -260,8 +261,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 # WARN(Jack): Do not hard code/copy paste the docs build directory in multiple places!
 # TODO(Jack): We should only need the source code to build the docs! The fact that we also need the resources and the
 # calibration config shows that our cmake process is a little out of control.
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     cmake -B "/buildroot/build-docs" -S "/temporary/code/library" \
@@ -482,7 +482,7 @@ FROM base-stage AS video-file-integration-test-stage
 COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
-RUN ldconfig
+
 
 # As of 01.09.2026 the video-file application only supports monocular camera calibration.
 # TODO(Jack): Should we install the extra toml package we need here in one of the venvs and use that?
