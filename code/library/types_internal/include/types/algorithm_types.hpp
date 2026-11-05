@@ -2,7 +2,8 @@
 
 #include <vector>
 
-#include "feature_extraction/types.hpp"
+#include <feature_extraction/types.hpp>
+
 #include "types/eigen_types.hpp"
 
 namespace reprojection {

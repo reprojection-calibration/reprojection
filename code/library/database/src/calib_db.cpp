@@ -620,8 +620,7 @@ void StepDelete(sqlite3* const db, StepId const step_id) {
     ExecuteStatement(sql_statements::steps_delete, binder, db);
 }
 
-void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id,
-                      TargetInfo const& target_info) {
+void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const asset_id, TargetInfo const& target_info) {
     auto const binder{[step_id, asset_id, target_info](sqlite3_stmt* const stmt) {
         Bind(stmt, 1, step_id.value);
         Bind(stmt, 2, asset_id.value);
@@ -636,7 +635,7 @@ void TargetInfoInsert(sqlite3* const db, StepId const step_id, AssetId const ass
 }
 
 std::expected<TargetInfo, std::string> TargetInfoSelect(sqlite3* const db, StepId const step_id,
-                                                                            AssetId const asset_id) {
+                                                        AssetId const asset_id) {
     std::optional<TargetInfo> target_info{std::nullopt};
 
     ExecuteQuery(

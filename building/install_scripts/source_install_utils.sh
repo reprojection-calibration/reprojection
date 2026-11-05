@@ -16,7 +16,8 @@ download_and_extract() {
     local sha256=$3
     local strip_components=${4:-0}
 
-    local file="${dest}/$(basename "${url}")"
+    local file
+    file="${dest}/$(basename "${url}")"
 
     wget --directory-prefix="${dest}" "${url}"
     echo "${sha256}  ${file}" | sha256sum --check --status

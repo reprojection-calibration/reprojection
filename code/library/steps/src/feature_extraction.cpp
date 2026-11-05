@@ -2,8 +2,9 @@
 
 #include <ranges>
 
+#include <feature_extraction/target_extraction.hpp>
+
 #include "database/calib_db.hpp"
-#include "feature_extraction/target_extraction.hpp"
 #include "hashing/hashing.hpp"
 #include "image_viewer/image_viewer.hpp"
 #include "logging/fmt.hpp"

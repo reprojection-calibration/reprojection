@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "feature_extraction/types.hpp"
+#include <feature_extraction/types.hpp>
 
 /**
  * \file enums.hpp

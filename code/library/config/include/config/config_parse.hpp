@@ -4,9 +4,9 @@
 #include <string>
 #include <thread>
 
+#include <feature_extraction/types.hpp>
 #include <toml++/toml.hpp>
 
-#include "feature_extraction/types.hpp"
 #include "types/enums.hpp"
 
 namespace reprojection::config {

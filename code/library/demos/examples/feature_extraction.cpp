@@ -1,8 +1,9 @@
 #include <iostream>
 
+#include <feature_extraction/target_extraction.hpp>
+
 #include "application/cli_utils.hpp"
 #include "config/config_parse.hpp"
-#include "feature_extraction/target_extraction.hpp"
 #include "image_viewer/image_viewer.hpp"
 #include "types/calibration_types.hpp"
 #include "video_capture/video_capture.hpp"
