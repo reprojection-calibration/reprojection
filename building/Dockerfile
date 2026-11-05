@@ -72,10 +72,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
       /temporary/${SOURCE_INSTALL_SQLITE}
 
-ARG INSTALL_DOXYGEN=building/install_scripts/install_doxygen.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
-        /temporary/${INSTALL_DOXYGEN}
+
 
 
 FROM apt-base-stage AS base-stage
@@ -254,6 +251,11 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 
 FROM base-stage AS docs-stage
+
+ARG INSTALL_DOXYGEN=building/install_scripts/install_doxygen.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
+        /temporary/${INSTALL_DOXYGEN}
 
 # WARN(Jack): Do not hard code/copy paste the docs build directory in multiple places!
 # TODO(Jack): We should only need the source code to build the docs! The fact that we also need the resources and the
