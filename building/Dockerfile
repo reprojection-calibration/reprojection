@@ -480,6 +480,7 @@ FROM base-stage AS video-file-integration-test-stage
 COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+RUN ldconfig
 
 # As of 01.09.2026 the video-file application only supports monocular camera calibration.
 # TODO(Jack): Should we install the extra toml package we need here in one of the venvs and use that?
