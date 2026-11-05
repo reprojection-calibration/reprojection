@@ -77,11 +77,6 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
         /temporary/${INSTALL_DOXYGEN}
 
-ARG SOURCE_INSTALL_FEATURE_EXTRACTION=building/install_scripts/source_install_feature_extraction.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${SOURCE_INSTALL_FEATURE_EXTRACTION},target=/temporary/${SOURCE_INSTALL_FEATURE_EXTRACTION} \
-    /temporary/${SOURCE_INSTALL_FEATURE_EXTRACTION}
-
 
 FROM apt-base-stage AS base-stage
 

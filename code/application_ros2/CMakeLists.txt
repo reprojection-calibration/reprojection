@@ -17,6 +17,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(cv_bridge REQUIRED)
+find_package(feature_extraction REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(reprojection REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
