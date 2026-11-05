@@ -70,8 +70,7 @@ Then open the link shown in the terminal.
 ## Configuration
 
 Please use [calibration_config.toml](code/test_data/calibration_config.toml) as the example to build your configuration
-file from. This file is used in all integration and smoke testing which mean it stays up to date. Please adapt this to
-your data and save it near your data.
+file from. This file is used in all integration and smoke testing which mean it stays up to date. Please adapt this to your data.
 
 Remove unused sensors from the calibration file. Unused or invalid configuration keys are not permitted.
 
@@ -87,7 +86,7 @@ translate the configuration structure into the TOML config file.
 The following items are particularly relevant:
 
 * Supported [camera models](https://reprojection-calibration.github.io/reprojection/enums_8hpp.html#ac17721a449f03b50c739a2bc8e1766cf)
-* Supported [target types](https://reprojection-calibration.github.io/reprojection/enums_8hpp.html#a2a5a0a640731cb9ae91569a46ef6d949)
+* Supported [target types](https://reprojection-calibration.github.io/feature-extraction/types_8hpp.html#a0c57be14e398df94c0b27953408a293f)
 
 ## Aprilgrid3
 
