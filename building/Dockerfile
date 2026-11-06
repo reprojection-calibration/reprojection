@@ -55,15 +55,12 @@ ARG APT_INSTALL_PYENV_DEPS=building/install_scripts/apt_install_pyenv_deps.sh
 RUN --mount=type=bind,source=${APT_INSTALL_PYENV_DEPS},target=/temporary/${APT_INSTALL_PYENV_DEPS} \
     /temporary/${APT_INSTALL_PYENV_DEPS}
 
-FROM apt-base-stage AS build-ceres-stage
+FROM apt-base-stage AS source-build-stage
 
 ARG SOURCE_INSTALL_CERES=building/install_scripts/source_install_ceres.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_CERES},target=/temporary/${SOURCE_INSTALL_CERES} \
     /temporary/${SOURCE_INSTALL_CERES}
-
-
-FROM apt-base-stage AS build-small-libraries-stage
 
 ARG SOURCE_INSTALL_SMALL_LIBRARIES=building/install_scripts/source_install_small_libraries.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
@@ -75,16 +72,13 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
     --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
       /temporary/${SOURCE_INSTALL_SQLITE}
 
-ARG INSTALL_DOXYGEN=building/install_scripts/install_doxygen.sh
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
-        /temporary/${INSTALL_DOXYGEN}
+
 
 
 FROM apt-base-stage AS base-stage
 
-COPY --from=build-ceres-stage /usr/local /usr/local
-COPY --from=build-small-libraries-stage /usr/local /usr/local
+COPY --from=source-build-stage /usr/local /usr/local
+RUN ldconfig
 
 # TODO(Jack): We cannot install to the default $HOME directory (pyenv's default) because in our current userless setup
 # that defaults to /root. This is fine during the build process but the second that we actually want to run the
@@ -259,11 +253,15 @@ COPY --from=code-coverage-stage  /buildroot/coverage-report  /usr/share/nginx/ht
 
 FROM base-stage AS docs-stage
 
+ARG INSTALL_DOXYGEN=building/install_scripts/install_doxygen.sh
+RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
+    --mount=type=bind,source=${INSTALL_DOXYGEN},target=/temporary/${INSTALL_DOXYGEN} \
+        /temporary/${INSTALL_DOXYGEN}
+
 # WARN(Jack): Do not hard code/copy paste the docs build directory in multiple places!
 # TODO(Jack): We should only need the source code to build the docs! The fact that we also need the resources and the
 # calibration config shows that our cmake process is a little out of control.
-RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
-    --mount=type=bind,source=code/library/,target=/temporary/code/library \
+RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources,target=/temporary/code/resources \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     cmake -B "/buildroot/build-docs" -S "/temporary/code/library" \
@@ -484,6 +482,7 @@ FROM base-stage AS video-file-integration-test-stage
 COPY code/test_data/calibration_config.toml /data/calibration_config.toml
 COPY --from=test-data-stage /data/video_file /data
 COPY --from=release-build-stage /opt/reprojection /opt/reprojection
+
 
 # As of 01.09.2026 the video-file application only supports monocular camera calibration.
 # TODO(Jack): Should we install the extra toml package we need here in one of the venvs and use that?

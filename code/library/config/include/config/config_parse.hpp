@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 
+#include <feature_extraction/types.hpp>
 #include <toml++/toml.hpp>
 
 #include "types/enums.hpp"
@@ -161,6 +162,7 @@ struct Config {
         bool asymmetric{false};
 
         // TODO(Jack): We should rename to make consistent "size" across all uses.
+
         /** \brief The number rows and columns.
          *
          *  \par Config Status
@@ -174,7 +176,8 @@ struct Config {
          */
         std::array<int, 2> size;
 
-        /** \brief The target's type.
+        /** \brief The target's type. Please see full target type definitions here
+         *  https://reprojection-calibration.github.io/feature-extraction/.
          *
          *  \par Config Status
          *  Required.

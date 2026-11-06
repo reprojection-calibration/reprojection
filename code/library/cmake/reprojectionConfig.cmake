@@ -8,6 +8,7 @@ include(CMakeFindDependencyMacro)
 find_dependency(Ceres REQUIRED)
 find_dependency(Eigen3 REQUIRED)
 find_dependency(SQLite3 REQUIRED)
+find_dependency(feature_extraction REQUIRED)
 find_dependency(spdlog REQUIRED)
 
 include("${CMAKE_CURRENT_LIST_DIR}/reprojectionTargets.cmake")

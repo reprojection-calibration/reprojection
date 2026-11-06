@@ -26,7 +26,7 @@ std::pair<MatrixX3d, ArrayX2i> MvgHelpers::BuildTargetPoints(bool const flat) {
     int const size{5};  // Square target - rows == cols
     int const num_points{size * size};
 
-    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(size, size, false)};
+    ArrayX2i const grid{eigen_utilities::GenerateGridIndices(size, size)};
     MatrixX3d points{MatrixX3d::Zero(num_points, 3)};
 
     // Center around zero with unit range [-0.5, 0.5]

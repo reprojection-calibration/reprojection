@@ -4,6 +4,8 @@
 
 #include <format>
 
+#include <feature_extraction/types.hpp>
+
 // cppcheck-suppress missingInclude
 #include "testing_utilities/generated/calibration_config.hpp"
 

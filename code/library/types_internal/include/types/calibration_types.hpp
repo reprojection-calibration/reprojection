@@ -27,15 +27,7 @@ struct CameraInfo {
     ImageBounds bounds;
 };
 
-struct TargetInfo {
-    TargetType target_type;
-    int height;
-    int width;
-    double unit_dimension;
-    // TODO(Jack): This annoys me that this is here because it only actually really applies to the circle grid target.
-    // You can have a symmetric or asymmetric circle grid but that is not possible for the other targets.
-    bool asymmetric;
-};
+using TargetInfo = feature_extraction::TargetInfo;
 
 struct Intrinsic {
     ArrayXd value;

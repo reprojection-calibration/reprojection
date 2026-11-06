@@ -9,6 +9,7 @@ set(INCLUDE_DIRECTORIES
 )
 set(PRIVATE_LINK_LIBRARIES
         ${OPENSSL_LIBRARIES}
+        reprojection::feature_extraction
         types_internal
 )
 set(PUBLIC_LINK_LIBRARIES

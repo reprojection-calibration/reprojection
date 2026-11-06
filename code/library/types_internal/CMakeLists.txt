@@ -13,6 +13,7 @@ target_include_directories(${LIBRARY_NAME} INTERFACE
 
 target_link_libraries(${LIBRARY_NAME} INTERFACE
         Eigen3::Eigen
+        reprojection::feature_extraction
 )
 
 # WARN(Jack): For some reason once we included the opencv include dirs about we started getting compiler errors about an
