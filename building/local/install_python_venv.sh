@@ -31,7 +31,7 @@ PYENV_VERSION=3.12 \
 # Install our custom python tooling code into the venv.
 EDITABLE_INSTALL=1 \
 PACKAGE_DIRECTORY="${project_root}/code/python_tooling" \
-PROTO_DIRECTORY="${project_root}/code/resources/proto" \
+PROTO_DIRECTORY="${project_root}/code/thirdparty/schemas/proto" \
 REPROJECTION_SQL_PYTHON_DIR="${project_root}/code/resources/sql" \
 RUN_TESTS=0 \
 REPROJECTION_VENV="${reprojection_venv}" \
