@@ -137,6 +137,7 @@ FROM base-stage AS python-binding-stage
 # TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         ${BINDING_BUILD_VENV}/bin/python \
           -m build \
@@ -213,6 +214,7 @@ FROM base-stage AS debug-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
       source ${BINDING_BUILD_VENV}/bin/activate; \
       source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -261,6 +263,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 # calibration config shows that our cmake process is a little out of control.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     cmake -B "/buildroot/build-docs" -S "/temporary/code/library" \
         -DBUILD_DOCS=ON; \
@@ -299,6 +302,7 @@ FROM base-stage AS library-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -317,6 +321,7 @@ FROM base-stage AS release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
