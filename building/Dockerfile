@@ -21,7 +21,7 @@ WORKDIR /buildroot
 # code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
 # your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
 # folder on the host system.
-ENV REPROJECTION_SQL_DIR=code/resources/sql
+ENV REPROJECTION_SQL_DIR=code/thirdparty/schemas/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
 
 
@@ -71,8 +71,6 @@ ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
       /temporary/${SOURCE_INSTALL_SQLITE}
-
-
 
 
 FROM apt-base-stage AS base-stage
