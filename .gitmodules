@@ -1,0 +1,3 @@
+[submodule "code/thirdparty/schemas"]
+	path = code/thirdparty/schemas
+	url = https://github.com/reprojection-calibration/schemas

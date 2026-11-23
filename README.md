@@ -20,6 +20,9 @@ on [GitHub](https://github.com/reprojection-calibration) or per [email](reprojec
 
 ## Build
 
+> [!IMPORTANT]
+> When you clone the repository make sure to specify `--recurse-submodules`
+
 Data can be input as a ROS1 or ROS2 bag file, or in any format supported by the
 OpenCV [cv::VideoCapture](https://docs.opencv.org/3.4.20/d8/dfe/classcv_1_1VideoCapture.html) API (ex. an .mp4 video
 file or folder of images). The three different application types are:

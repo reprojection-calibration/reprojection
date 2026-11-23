@@ -21,7 +21,7 @@ WORKDIR /buildroot
 # code we need to actually copy the files into the image because they are loaded at run time. I should also note that if
 # your are doing local development of the python tooling you will need to set REPROJECTION_SQL_PYTHON_DIR to the correct
 # folder on the host system.
-ENV REPROJECTION_SQL_DIR=code/resources/sql
+ENV REPROJECTION_SQL_DIR=code/thirdparty/schemas/sql
 ENV REPROJECTION_SQL_PYTHON_DIR=/temporary/${REPROJECTION_SQL_DIR}
 
 
@@ -71,8 +71,6 @@ ARG SOURCE_INSTALL_SQLITE=building/install_scripts/source_install_sqlite.sh
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=${SOURCE_INSTALL_SQLITE},target=/temporary/${SOURCE_INSTALL_SQLITE} \
       /temporary/${SOURCE_INSTALL_SQLITE}
-
-
 
 
 FROM apt-base-stage AS base-stage
@@ -139,6 +137,7 @@ FROM base-stage AS python-binding-stage
 # TODO(Jack): I wish we could also run the binding c++ side unit tests here but we do not.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         ${BINDING_BUILD_VENV}/bin/python \
           -m build \
@@ -164,7 +163,7 @@ COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
-ARG PROTO_DIRECTORY=/temporary/code/resources/proto
+ARG PROTO_DIRECTORY=/temporary/code/thirdparty/schemas/proto
 
 # Install the python binding wheel into the python tooling venv.
 RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=/temporary/wheels \
@@ -173,7 +172,7 @@ RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
+    --mount=type=bind,source=code/thirdparty/schemas/proto,target=${PROTO_DIRECTORY} \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     RUN_TESTS=1 /temporary/${BUILD_PYTHON_TOOLING}
 
@@ -215,6 +214,7 @@ FROM base-stage AS debug-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
       source ${BINDING_BUILD_VENV}/bin/activate; \
       source /temporary/${SOURCE_INSTALL_UTILS}; \
@@ -263,6 +263,7 @@ RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_
 # calibration config shows that our cmake process is a little out of control.
 RUN --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     cmake -B "/buildroot/build-docs" -S "/temporary/code/library" \
         -DBUILD_DOCS=ON; \
@@ -301,6 +302,7 @@ FROM base-stage AS library-release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
@@ -319,6 +321,7 @@ FROM base-stage AS release-build-stage
 RUN --mount=type=bind,source=${SOURCE_INSTALL_UTILS},target=/temporary/${SOURCE_INSTALL_UTILS} \
     --mount=type=bind,source=code/library/,target=/temporary/code/library \
     --mount=type=bind,source=code/resources/,target=/temporary/code/resources \
+    --mount=type=bind,source=code/thirdparty/schemas/,target=/temporary/code/thirdparty/schemas \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
         source /temporary/${SOURCE_INSTALL_UTILS}; \
         cmake_build \
