@@ -162,7 +162,7 @@ COPY code/python_tooling /temporary/code/python_tooling
 COPY ${REPROJECTION_SQL_DIR} ${REPROJECTION_SQL_PYTHON_DIR}
 
 ARG PACKAGE_DIRECTORY=/temporary/code/python_tooling
-ARG PROTO_DIRECTORY=/temporary/code/resources/proto
+ARG PROTO_DIRECTORY=/temporary/code/thirdparty/schemas/proto
 
 # Install the python binding wheel into the python tooling venv.
 RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=/temporary/wheels \
@@ -171,7 +171,7 @@ RUN --mount=type=bind,from=python-binding-stage,source=/buildroot/wheels,target=
 
 ARG BUILD_PYTHON_TOOLING=building/scripts/build_python_tooling.sh
 RUN --mount=type=bind,source=${BUILD_PYTHON_TOOLING},target=/temporary/${BUILD_PYTHON_TOOLING} \
-    --mount=type=bind,source=code/resources/proto,target=/temporary/code/resources/proto \
+    --mount=type=bind,source=code/thirdparty/schemas/proto,target=${PROTO_DIRECTORY} \
     --mount=type=bind,source=code/test_data/calibration_config.toml,target=/temporary/code/test_data/calibration_config.toml \
     RUN_TESTS=1 /temporary/${BUILD_PYTHON_TOOLING}
 
