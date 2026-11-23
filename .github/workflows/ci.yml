@@ -41,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: true
       - uses: ./.github/actions/docker-build
         with:
           cache_scope: debug-build
@@ -66,6 +68,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           lfs: true
+          submodules: true
       - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
@@ -158,6 +161,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           lfs: true
+          submodules: true
       - run: git lfs pull
       - uses: ./.github/actions/docker-build
         with:
@@ -191,6 +195,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           lfs: true
+          submodules: true
       - run: git lfs pull
       - name: Build application entrypoint image
         uses: ./.github/actions/docker-build
@@ -298,7 +303,7 @@ jobs:
           set -eoux pipefail
           
           mkdir --parents "${RUNNER_TEMP}/docs"
-      
+          
           container_id="$(docker create reprojection:docs-stage)"
           docker cp \
             "${container_id}:/buildroot/build-docs/docs/0.0.0/." \
